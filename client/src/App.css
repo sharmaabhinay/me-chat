@@ -1,0 +1,14 @@
+.grid-parent{
+    display: grid;
+    grid-template-columns: auto auto;
+}
+.chat-parent::-webkit-scrollbar{
+    display: none;
+}
+#message-desapear{
+    /* box-shadow: 10px 18px 15px 0px inset rgb(255, 255, 255); */
+    background-color: transparent;
+}
+ #Chats::-webkit-scrollbar{
+    display: none;
+ }
