@@ -9,6 +9,12 @@ const server= http.createServer(app)
 const io = socketIO(server)
 // userSchema()
 let users = [{}]
+app.get('/',(req,res)=> {
+    res.send('hello world')
+})
+app.get('/html',(req,res)=> {
+    res.send('html loaded')
+})
 io.on('connection',(socket)=> {
     console.log('New connection');
 
@@ -29,9 +35,7 @@ io.on('connection',(socket)=> {
     
 })
 
-app.get('/',(req,res)=> {
-    res.send('hello world')
-})
+
 let Time = new Date()
 server.listen(PORT,()=> {
     console.log('server is running on port',PORT,' at ', Time.getMinutes(),":",Time.getSeconds())
