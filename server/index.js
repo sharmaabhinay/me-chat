@@ -1,24 +1,25 @@
 const express = require('express');
-const http = require('http')
+const http = require('http');
 const app = express()
 // const {Server} = require('socket.io')
-const socketIO = require('socket.io')
+const socketIO = require('socket.io');
+// const { userSchema } = require('./userSchema');
 let PORT = '4300'
 const server= http.createServer(app)
-
 const io = socketIO(server)
+// userSchema()
 let users = [{}]
 io.on('connection',(socket)=> {
     console.log('New connection');
 
     socket.on('joined',({user})=> {
-        users[socket.id] = user;
+        users[socket.id] = user.number;
         console.log(user);
         socket.broadcast.emit('userJoined',{user:users[socket.id], message:`${users[socket.id]} has joineddd`})
         socket.emit('welcome',{user:users[socket.id],message:'Welcome to the chat'})
         console.log(io.engine.clientsCount)
         socket.on('message-send',(data)=> {
-            io.emit('new-massage',{user:data.user,message:data.message})
+            io.emit('new-massage',{user:data.user.name,message:data.message})
         })
     });
     socket.on('disconnect',()=> {

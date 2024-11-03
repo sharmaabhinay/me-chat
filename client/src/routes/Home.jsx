@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Chats from "../components/Chats";
 import Chattings from "../components/Massages";
 import { User } from "./Signup";
@@ -8,51 +8,59 @@ import { User } from "./Signup";
 import socketIO from "socket.io-client";
 
 const Home = () => {
-  let messages = [
-    { sentBy: "him", messaged: "hello" },
-    { sentBy: "you", messaged: "hi" },
-    { sentBy: "him", messaged: "can i ask you something" },
-    { sentBy: "you", messaged: "yes! why not" },
-    { sentBy: "him", messaged: "are you sure??" },
-    { sentBy: "you", messaged: "you boy." },
-    { sentBy: "you", messaged: "just go ahead" },
-    { sentBy: "him", messaged: "thank you so much thats what i was expecting" },
-    { sentBy: "you", messaged: "np tell me" },
-    { sentBy: "him", messaged: "do you know why this kolavery the" },
-    { sentBy: "you", messaged: "yes" },
-    { sentBy: "him", messaged: "you know." },
-    { sentBy: "him", messaged: "can i ask you something" },
-    { sentBy: "you", messaged: "yes! why not" },
-    { sentBy: "him", messaged: "are you sure??" },
-    { sentBy: "you", messaged: "you boy." },
-    { sentBy: "you", messaged: "just go ahead" },
-    { sentBy: "him", messaged: "thank you so much thats what i was expecting" },
-    { sentBy: "you", messaged: "np tell me" },
-    {
-      sentBy: "him",
-      messaged:
-        "do you know why this kolavery the do you know why this kolavery the do you know why this kolavery the v do you know why this kolavery the do you know why this kolavery the",
-    },
-    { sentBy: "you", messaged: "yes" },
-    { sentBy: "him", messaged: "you know." },
-    { sentBy: "him", messaged: "can i ask you something" },
-    { sentBy: "you", messaged: "yes! why not" },
-    { sentBy: "him", messaged: "are you sure??" },
-    { sentBy: "you", messaged: "you boy." },
-    { sentBy: "you", messaged: "just go ahead" },
-    { sentBy: "him", messaged: "thank you so much thats what i was expecting" },
-    { sentBy: "you", messaged: "np tell me" },
-    { sentBy: "him", messaged: "do you know why this kolavery the" },
-    { sentBy: "you", messaged: "yes" },
-    { sentBy: "him", messaged: "you know." },
-  ];
+  // let messages = [
+  //   { sentBy: "him", messaged: "hello" },
+  //   { sentBy: "you", messaged: "hi" },
+  //   { sentBy: "him", messaged: "can i ask you something" },
+  //   { sentBy: "you", messaged: "yes! why not" },
+  //   { sentBy: "him", messaged: "are you sure??" },
+  //   { sentBy: "you", messaged: "you boy." },
+  //   { sentBy: "you", messaged: "just go ahead" },
+  //   { sentBy: "him", messaged: "thank you so much thats what i was expecting" },
+  //   { sentBy: "you", messaged: "np tell me" },
+  //   { sentBy: "him", messaged: "do you know why this kolavery the" },
+  //   { sentBy: "you", messaged: "yes" },
+  //   { sentBy: "him", messaged: "you know." },
+  //   { sentBy: "him", messaged: "can i ask you something" },
+  //   { sentBy: "you", messaged: "yes! why not" },
+  //   { sentBy: "him", messaged: "are you sure??" },
+  //   { sentBy: "you", messaged: "you boy." },
+  //   { sentBy: "you", messaged: "just go ahead" },
+  //   { sentBy: "him", messaged: "thank you so much thats what i was expecting" },
+  //   { sentBy: "you", messaged: "np tell me" },
+  //   {
+  //     sentBy: "him",
+  //     messaged:
+  //       "do you know why this kolavery the do you know why this kolavery the do you know why this kolavery the v do you know why this kolavery the do you know why this kolavery the",
+  //   },
+  //   { sentBy: "you", messaged: "yes" },
+  //   { sentBy: "him", messaged: "you know." },
+  //   { sentBy: "him", messaged: "can i ask you something" },
+  //   { sentBy: "you", messaged: "yes! why not" },
+  //   { sentBy: "him", messaged: "are you sure??" },
+  //   { sentBy: "you", messaged: "you boy." },
+  //   { sentBy: "you", messaged: "just go ahead" },
+  //   { sentBy: "him", messaged: "thank you so much thats what i was expecting" },
+  //   { sentBy: "you", messaged: "np tell me" },
+  //   { sentBy: "him", messaged: "do you know why this kolavery the" },
+  //   { sentBy: "you", messaged: "yes" },
+  //   { sentBy: "him", messaged: "you know." },
+  // ];
   const [conversation, setConversation] = useState([]);
   const [chat, setchat] = useState("");
   const [temp, settemp] = useState();
-  const [connectedFrnd,setConnectedFrnd] = useState('')
+  const [connectedFrnd, setConnectedFrnd] = useState("");
+  let scrollToBottom = useRef()
+
   var socket;
   let user = User;
+ 
 
+  useEffect(()=>{
+    if(scrollToBottom.current){
+      scrollToBottom.current.scrollIntoView({behavior: 'smooth'})
+    }
+  },[conversation])
   const socketFun = () => {
     const ENDPOINT = "http://localhost:4300/";
     socket = socketIO(ENDPOINT, { transports: ["websocket"] });
@@ -65,42 +73,47 @@ const Home = () => {
 
     socket.emit("joined", { user });
     socket.on("userJoined", (data) => {
-      console.log(data.message)
-      setConversation([...conversation, data]);
-      setConnectedFrnd(data.user)
-      console.log(connectedFrnd)
+      // console.log(data.message);
+      setConversation((p) => [...p, data]);
+      setConnectedFrnd(data.user.name);
+      console.log(connectedFrnd);
     });
     socket.on("welcome", (data) => {
       // setChats([...chats, data]);
-      console.log(data.user, data.message);
+      setConversation((p) => [...p, data]);
     });
     socket.on("leave", (data) => {
       console.log(data);
-      setConversation((p)=> [...p,data]);
+      setConversation((p) => [...p, data]);
     });
     socket.on("new-massage", (data) => {
-      setConversation((p)=> [...p,data]);
-      // console.log(conversation) 
+      setConversation((p) => [...p, data]);
+      // console.log(conversation)
     });
   };
   useEffect(() => {
+    console.log(user)
     socketFun();
-    console.log(conversation)
+    console.log(conversation);
   }, [user]);
   const handleOnSend = (e) => {
     e.preventDefault();
     // console.log(temp)
     // alert(chat)
-    setchat("");
-    if (temp) {
-      temp.emit("message-send", { user, message: chat });
+    if (chat.length < 1) {
+      alert("message can't be empty");
     } else {
-      console.log("socket no initiated");
+      setchat("");
+      if (temp) {
+        temp.emit("message-send", { user, message: chat });
+      } else {
+        console.log("socket no initiated");
+      }
     }
   };
   return (
     <div className="fixed bg-gray-900 h-[100vh]">
-      <h1 className=" font-medium bg-purple-700 p-2">me-chat</h1>
+      <h1 className=" font-medium bg-purple-700 p-2" onClick={()=> console.log(conversation)}>me-chat</h1>
       <div
         className="grid-parent mt-2"
         style={{ display: "grid", gridTemplateColumns: "auto auto" }}
@@ -114,7 +127,7 @@ const Home = () => {
                 width={40}
                 className="rounded-full"
               />
-              <h1 className="font-bold">{user}</h1>
+              <h1 className="font-bold">{user.name}</h1>
             </div>
             <div className="cursor-pointer">
               <i className="fa-solid fa-ellipsis-vertical"></i>
@@ -156,13 +169,15 @@ const Home = () => {
                 id="Chats"
               >
                 <div className="w-[80%] m-auto">
-                  {conversation && conversation.map((item, i) => (
-                    <Chattings
-                      sentBy={item.user}
-                      Messaged={item.message}
-                      key={i}
-                    />
-                  ))}
+                  {conversation &&
+                    conversation.map((item, i) => (
+                      <Chattings
+                        sentBy={item.user}
+                        Messaged={item.message}
+                        key={i}
+                      />
+                    ))}
+                    <div ref={scrollToBottom}></div>
                 </div>
               </div>
               <div className="fixed w-[80vw] bottom-5">
