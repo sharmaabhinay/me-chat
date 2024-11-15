@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import OtpInput from "react-otp-input";
-export let User={name:'',phone:''}
+export let User = {name:'',
+  phone:'',
+  email:''
+}
 const Signup = () => {
   let navigate = useNavigate();
   let [number, setNumber] = useState("");
@@ -12,22 +15,21 @@ const Signup = () => {
   const verifyOtp = (e) => {
     // e.preventDefault();
     setIsSpin(true)
-    User.phone = number;
     setTimeout(() => {
       setIsSpin(false)
       alert("verified successfully");
-      navigate("/user");
+      navigate("/user"); 
     },1000);
   };
   
   useEffect(() => {
-    // if (otp.length == 6) {
-    //   verifyOtp()
-    // }else if(!isOtpSent){
-    //   alert('please send the otp')
-    // }else{
+    if (otp.length == 6) {
+      verifyOtp()
+    }else if(!isOtpSent){
+      // alert('please send the otp')
+    }else{
       
-    // }
+    }
   }, [otp]);
   const sendOtp = (e) => {
     e.preventDefault();
@@ -37,8 +39,7 @@ const Signup = () => {
     } else {
       setisOtpSent(true)
       alert("otp sent");
-      navigate("/user");
-      // otpRef.focus();
+      otpRef.focus();
     }
   };
   return (

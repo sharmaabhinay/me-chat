@@ -4,48 +4,12 @@ import Chattings from "../components/Massages";
 import { User } from "./Signup";
 // import { bg_color } from '../assets/properties'
 // import ReactScrollToBottom from 'react-scroll-to-bottom';
-
+export let  BcUrl = 'https://chat-app-backend-phi-azure.vercel.app/'
+export let LocalUrl = 'http://localhost:4300/'
 import socketIO from "socket.io-client";
 
 const Home = () => {
-  // let messages = [
-  //   { sentBy: "him", messaged: "hello" },
-  //   { sentBy: "you", messaged: "hi" },
-  //   { sentBy: "him", messaged: "can i ask you something" },
-  //   { sentBy: "you", messaged: "yes! why not" },
-  //   { sentBy: "him", messaged: "are you sure??" },
-  //   { sentBy: "you", messaged: "you boy." },
-  //   { sentBy: "you", messaged: "just go ahead" },
-  //   { sentBy: "him", messaged: "thank you so much thats what i was expecting" },
-  //   { sentBy: "you", messaged: "np tell me" },
-  //   { sentBy: "him", messaged: "do you know why this kolavery the" },
-  //   { sentBy: "you", messaged: "yes" },
-  //   { sentBy: "him", messaged: "you know." },
-  //   { sentBy: "him", messaged: "can i ask you something" },
-  //   { sentBy: "you", messaged: "yes! why not" },
-  //   { sentBy: "him", messaged: "are you sure??" },
-  //   { sentBy: "you", messaged: "you boy." },
-  //   { sentBy: "you", messaged: "just go ahead" },
-  //   { sentBy: "him", messaged: "thank you so much thats what i was expecting" },
-  //   { sentBy: "you", messaged: "np tell me" },
-  //   {
-  //     sentBy: "him",
-  //     messaged:
-  //       "do you know why this kolavery the do you know why this kolavery the do you know why this kolavery the v do you know why this kolavery the do you know why this kolavery the",
-  //   },
-  //   { sentBy: "you", messaged: "yes" },
-  //   { sentBy: "him", messaged: "you know." },
-  //   { sentBy: "him", messaged: "can i ask you something" },
-  //   { sentBy: "you", messaged: "yes! why not" },
-  //   { sentBy: "him", messaged: "are you sure??" },
-  //   { sentBy: "you", messaged: "you boy." },
-  //   { sentBy: "you", messaged: "just go ahead" },
-  //   { sentBy: "him", messaged: "thank you so much thats what i was expecting" },
-  //   { sentBy: "you", messaged: "np tell me" },
-  //   { sentBy: "him", messaged: "do you know why this kolavery the" },
-  //   { sentBy: "you", messaged: "yes" },
-  //   { sentBy: "him", messaged: "you know." },
-  // ];
+ 
   const [conversation, setConversation] = useState([]);
   const [chat, setchat] = useState("");
   const [temp, settemp] = useState();
@@ -62,7 +26,7 @@ const Home = () => {
     }
   },[conversation])
   const socketFun = () => {
-    const ENDPOINT = "http://localhost:4300/";
+    const ENDPOINT = LocalUrl;
     socket = socketIO(ENDPOINT, { transports: ["websocket"] });
     settemp(socket);
     socket.on("connect", () => {
