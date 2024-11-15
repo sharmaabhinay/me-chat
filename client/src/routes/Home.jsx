@@ -6,6 +6,7 @@ import { User } from "./Signup";
 // import ReactScrollToBottom from 'react-scroll-to-bottom';
 export let  BcUrl = 'https://chat-app-backend-phi-azure.vercel.app/'
 export let LocalUrl = 'http://localhost:4300/'
+export let RenderUrl = 'https://me-chat-cazt.onrender.com/'
 import socketIO from "socket.io-client";
 
 const Home = () => {
@@ -26,7 +27,7 @@ const Home = () => {
     }
   },[conversation])
   const socketFun = () => {
-    const ENDPOINT = LocalUrl;
+    const ENDPOINT = RenderUrl;
     socket = socketIO(ENDPOINT, { transports: ["websocket"] });
     settemp(socket);
     socket.on("connect", () => {
