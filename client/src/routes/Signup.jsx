@@ -1,110 +1,116 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import OtpInput from "react-otp-input";
-export let User = {name:'',
-  phone:'',
-  email:''
-}
+export let User = { name: "", phone: "", email: "" };
 const Signup = () => {
   let navigate = useNavigate();
   let [number, setNumber] = useState("");
-  let [otp, setOtp] = useState("");
+  let [password, setPassword] = useState("");
+  const [isChecked, setIsChecked] = useState(true);
+  const [buttonBgColor, setButtonBgColor] = useState("bg-purple-400");
+  const [phoneError, setPhoneError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   let [isSpin, setIsSpin] = useState(false);
-  let [isOtpSent,setisOtpSent] = useState(false)
-  let otpRef = useRef();
-  const verifyOtp = (e) => {
-    // e.preventDefault();
-    setIsSpin(true)
-    setTimeout(() => {
-      setIsSpin(false)
-      alert("verified successfully");
-      navigate("/user"); 
-    },1000);
-  };
-  
-  useEffect(() => {
-    if (otp.length == 6) {
-      verifyOtp()
-    }else if(!isOtpSent){
-      // alert('please send the otp')
-    }else{
-      
-    }
-  }, [otp]);
-  const sendOtp = (e) => {
-    e.preventDefault();
-    User = number;
-    if (number.length <= 9) {
-      alert("invalid phone number");
+  const FunOnChange = (e) => {
+    setNumber(e.target.value);
+    console.log(e.target.value);
+    if (number.length < 3) {
+      setPhoneError("invalid number");
     } else {
-      setisOtpSent(true)
-      alert("otp sent");
-      otpRef.focus();
+      setPhoneError("");
     }
   };
+  const FunOnChangePass = (e) => {
+    setPassword(e.target.value);
+    if (password.length < 3) {
+      setPasswordError("Weak passpword");
+    } else {
+      setPasswordError("");
+    }
+  };
+  const handOnContinue = (e) => {
+    e.preventDefault();
+
+    if (isChecked) {
+      alert("check the policies");
+    } else {
+      
+      if (!number || !password) {
+        alert("invalid input");
+      }else if(number.length <= 3 || password.length <= 3){
+        alert('Please recheck the number and password')
+      }else{
+        alert('logged in')
+      }
+    }
+  };
+  const checkFun = (e) => {
+    // setIsChecked(true)
+    if (!isChecked) {
+      setIsChecked(true);
+    } else {
+      setIsChecked(false);
+    }
+    console.log(isChecked);
+  };
+
   return (
-    <div className="h-screen bg-gray-700 grid items-center justify-center">
-      <div className="border-2 flex flex-col gap-5 rounded-lg border-white bg-gray-600">
-        <div className="text-center shadow-2xl bg-gray-400 py-4">
-          <img
-            src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/facebook-messenger-icon.png"
-            alt=""
-            className="max-w-16 m-auto"
-          />
-        </div>
-        <form action="" onSubmit={sendOtp} className="px-3">
-          <input
-            type="tel"
-            autoFocus
-            placeholder="phone number"
-            maxLength={10}
-            onChange={(e) => setNumber(e.target.value)}
-            className="outline-none rounded-s-full py-2 text-gray-500 font-bold px-4 "
-          />
-          <button
-          type="submit"
-            className={`bg-purple-700 rounded-e-full font-bold py-2 px-4 ${
-              number.length <= 9
-                ? "cursor-not-allowed text-gray-400"
-                : "cursor-pointer text-gray-100"
-            }`}
-          >
-            send Otp
-          </button>
-        </form>
-        <form
-          action=""
-          onSubmit={verifyOtp}
-          className="px-4 flex flex-col gap-5 mb-5"
-        >
-          {/* <OtpInput
-            ref={otpRef}
-            inputType="tel"
-            containerStyle={"flex justify-center gap-3"}
-            inputStyle={
-              "outline-none text-center rounded-sm text-xl text-blue-500"
-            }
-            value={otp}
-            onChange={setOtp}
-            numInputs={6}
-            renderSeparator={<span className=""></span>}
-            renderInput={(props) => <input {...props} />}
-          /> */}
-          <div
-            onClick={verifyOtp}
-            className={`text-lg text-center flex justify-center items-center gap-3 rounded-full py-2 font-bold ${
-              otp.length <= 5
-                ? "bg-purple-700 text-gray-300 cursor-not-allowed"
-                : "bg-purple-700 cursor-pointer text-white"
-            }`}
-          >
-            <span>verify</span>
-            <div
-              className={`h-4 w-4 border-s-4 animate-spin border-t-2 border-b-2 rounded-full ${
-                isSpin ? "block" : "hidden"
-              }`}
-            ></div>
+    <div
+      className="h-screen bg-gray-700 grid items-center justify-center"
+      id="bg-image"
+    >
+      <div className="bg-purple-700 absolute w-full top-0 font-bold text-lg text-white p-2 font-mono">
+        React-Chat
+      </div>
+      <div className=" flex flex-col gap-5 rounded-lg p-5 m-auto w-[60%] bg-gray-200">
+        <form action="" className="flex flex-col text-black gap-3">
+          <h1 className="font-bold text-xl text-center font-mono">Signin</h1>
+          <div className="h-px bg-red-400 hidden"></div>
+          <div>
+            <input
+              autoFocus
+              value={number}
+              onChange={FunOnChange}
+              type="number"
+              placeholder="phone"
+              className="outline-none w-full focus:border-purple-700 border-2 rounded-full p-2 px-4 text-lg"
+            />
+            <p className="text-red-800 text-sm px-4">{phoneError}</p>
           </div>
+          <div>
+            <input
+              value={password}
+              onChange={FunOnChangePass}
+              type="password"
+              placeholder="password"
+              className="outline-none w-full focus:border-purple-700 border-2 rounded-full p-2 px-4 text-lg"
+            />
+            <p className="text-red-800 text-sm px-4">{passwordError}</p>
+          </div>
+
+          <div className="px-4">
+            <a href="" className="text-sm text-blue-800">
+              Forgot password ?
+            </a>
+          </div>
+          <div className="p-4 leading-4">
+            <input type="checkbox" id="check" onChange={checkFun} />
+            <label htmlFor="check" className="text-sm">
+              Lorem ipsum dolor sit amet consectetur adipisicing elit. Sequi,
+              exercitationem.
+            </label>
+          </div>
+
+          <button
+            className={`text-white ${!isChecked ? 'bg-purple-700' :'bg-purple-400'} ${
+              buttonBgColor == "bg-purple-400"
+                ? "cursor-not-allowed"
+                : "cursor-pointer"
+            } rounded-full p-2 font-bold text-lg`}
+            onClick={handOnContinue}
+          >
+            continue
+          </button>
         </form>
       </div>
     </div>

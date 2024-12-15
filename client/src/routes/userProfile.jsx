@@ -40,7 +40,8 @@ const UserProfile = () => {
   };
   
   return (
-    <div className="h-screen bg-gray-700 grid items-center justify-center">
+    <div className="h-screen bg-gray-700 grid items-center justify-center" id="bg-image">
+      <div className="bg-purple-700 absolute w-full top-0 font-bold text-lg text-white p-2 font-mono">React-chat</div>
       <div className="flex gap-2 flex-col bg-white rounded-lg w-[20rem]">
         <h1 className="text-center bg-gray-500 text-white font-bold py-3 text-2xl rounded-t-lg">
           Profile
@@ -79,7 +80,7 @@ const UserProfile = () => {
             className="rounded-full outline-purple-700 border-2 p-2 px-3 bg-gray-200"
           />
           <button
-            className={`bg-purple-700 w-full py-2 rounded-full text-lg ${
+            className={`bg-purple-700 w-full font-bold text-lg py-2 rounded-full text-lg ${
               name.length <= 2
                 ? "text-gray-400 cursor-not-allowed"
                 : "text-gray-100 cursor-pointer"

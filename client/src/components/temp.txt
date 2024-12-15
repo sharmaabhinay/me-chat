@@ -1,0 +1,41 @@
+<div className="flex gap-5">
+                <i className="fa-solid fa-phone"></i>
+                <i className="fa-solid fa-video"></i>
+                <i className="fa-solid fa-circle-info"></i>
+              </div>
+
+
+
+Input send box
+
+<div className="fixed w-[80vw] bottom-5">
+                <form
+                  action=""
+                  onSubmit={handleOnSend}
+                  className="flex justify-between w-[40%] m-auto gap-4"
+                >
+                  <div className="bg-white hover:text-xl duration-100 rounded-full flex items-center w-11 justify-center text-purple-700">
+                    <i className="fa-solid fa-paperclip"></i>
+                  </div>
+                  <input
+                    type="text"
+                    value={chat}             
+                    onChange={(e) => setchat(e.target.value)}
+                    placeholder="start your holy conversation..."
+                    className="outline-none focus:border-purple-700 border-2 rounded-full py-2 px-3 w-[80%]"
+                  />
+                  <div
+                    onClick={handleOnSend}
+                    className="bg-purple-700 cursor-pointer hover:text-xl duration-100 rounded-full flex items-center w-11 justify-center text-white"
+                  >
+                    <i className="fa-solid fa-paper-plane"></i>
+                  </div>
+                </form>
+              </div>
+
+
+eclipse icon
+<i className="fa-solid fa-ellipsis-vertical"></i>
+
+profile dummy image
+https://www.das-macht-schule.net/wp-content/uploads/2018/04/dummy-profile-pic.png
