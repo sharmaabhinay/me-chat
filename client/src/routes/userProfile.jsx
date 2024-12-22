@@ -1,11 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { User } from "./Signup";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
+import BackendUrl from "../backendUrl";
+import { sign_in_profile } from "../redux/user/action";
 
 const UserProfile = () => {
+  let result = useSelector((state) => state.rootReducer.userData)
+  const dispatch = useDispatch()
   let [name, setName] = useState("");
   let [about, setAbout] = useState("");
   let [email, setEmail] = useState("");
+ 
+  useEffect(()=> {
+    console.log('here is the : ', result)
+  },[result])
   let avatars = [
     {
       id: 1,
@@ -33,10 +43,25 @@ const UserProfile = () => {
     },
   ];
   let navigate = useNavigate()
-  const submit = (e) => {
-    User.name = name;
+  const submit =async  (e) => {
     e.preventDefault();
-    navigate('/chat')
+    let userData = {
+      profile_pic:'#abc',
+      name:name,
+      about:about,
+      email:email,
+      id:result.id
+    }
+    let {data} = await axios.post(`${BackendUrl}/user-profile`,{userData})
+    if(data.message == 'profile updated'){
+      alert('profile updated')
+      console.log(data)
+      data = data.user;
+      dispatch(sign_in_profile({data}))
+      
+    }else{
+      alert('someting went wrong')
+    }
   };
   
   return (
@@ -52,8 +77,8 @@ const UserProfile = () => {
             alt=""
             className="h-20 rounded-full m-auto"
           />
-          <div className="relative text-center rounded-full">
-            <i className="fa-solid fa-pencil text-red-500 -translate-y-5 bg-gray-200 rounded-full p-2 translate-x-6"></i>
+          <div className="relative text-center rounded-full ">
+            <i className="fa-solid fa-pencil text-red-500 cursor-pointer -translate-y-5 bg-gray-200 rounded-full p-2 translate-x-6"></i>
           </div>
         </div>
         <form action="" onSubmit={submit} className="flex p-2 flex-col gap-2">

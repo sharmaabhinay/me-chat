@@ -9,6 +9,7 @@ let socketConn = ()=> {
     if(socket){
         console.log('connected')
     }
+    // dispatch(establish_connection(socket))
     return socket;
 }
 export default socketConn;

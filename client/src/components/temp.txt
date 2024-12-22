@@ -39,3 +39,53 @@ eclipse icon
 
 profile dummy image
 https://www.das-macht-schule.net/wp-content/uploads/2018/04/dummy-profile-pic.png
+
+
+{ sendBy: "f", message: "Hii", time: "12:32" },
+    { sendBy: "me", message: "Hello", time: "12:32" },
+    { sendBy: "f", message: "How are you", time: "12:32" },
+    { sendBy: "me", message: "Kaun", time: "12:32" },
+    { sendBy: "me", message: "?", time: "12:32" },
+    { sendBy: "f", message: "Nai pehchana?", time: "12:32" },
+    { sendBy: "me", message: "Jb hi to puchha", time: "12:32" },
+    { sendBy: "me", message: "Kaun", time: "12:32" },
+    { sendBy: "me", message: "?", time: "12:32" },
+    { sendBy: "f", message: "Nai pehchana?", time: "12:32" },
+    { sendBy: "me", message: "Jb hi to puchha", time: "12:32" },
+    { sendBy: "me", message: "Kaun", time: "12:32" },
+    { sendBy: "me", message: "?", time: "12:32" },
+    { sendBy: "f", message: "Nai pehchana?", time: "12:32" },
+    { sendBy: "me", message: "Jb hi to puchha", time: "12:32" },
+    { sendBy: "me", message: "Kaun", time: "12:32" },
+    { sendBy: "me", message: "?", time: "12:32" },
+    { sendBy: "f", message: "Nai pehchana?", time: "12:32" },
+    { sendBy: "me", message: "Jb hi to puchha", time: "12:32" },
+    { sendBy: "me", message: "Kaun", time: "12:32" },
+    { sendBy: "me", message: "?", time: "12:32" },
+    { sendBy: "f", message: "Nai pehchana?", time: "12:32" },
+    { sendBy: "me", message: "Jb hi to puchha", time: "12:32" },
+
+    socket.on("joined", ( user ) => {
+    users[socket.id] = user;
+    console.log("client : ", user);
+    console.log("user id :", users);
+    socket.broadcast.emit("userJoined", {
+      user: users[socket.id],
+      message: `${users[socket.id]} has joined`,
+    });
+    socket.emit("welcome", {
+      user: users[socket.id],
+      message: "Welcome to the chat",
+    });
+    console.log(io.engine.clientsCount);
+    socket.on("message-send", (data) => {
+      console.log(data);
+      io.emit("new-massage", { user: data.user.name, message: data.message });
+    });
+  });
+
+  id,
+  name,
+  profile_pic,
+  online_status,
+  messages=[]

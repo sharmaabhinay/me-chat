@@ -1,9 +1,14 @@
 import React, { useRef, useState,useEffect } from "react";
 import Messages from "../components/Messages";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import BackendUrl from "../backendUrl";
 
 
 
-const SpecificChat = ({ data }) => {
+const SpecificChat = ({ data , socket }) => {
+
+  const userData = useSelector((state)=> state.rootReducer.userData)
   const [conversation, setConversation] = useState([]);
   const [chat, setchat] = useState([]);
   const [temp, settemp] = useState();
@@ -12,47 +17,52 @@ const SpecificChat = ({ data }) => {
   const [singleChat,setSingleChat] = useState({})
   let scrollToBottom = useRef();
   let chatScroll = useRef();
-  
+  // console.log('socket status from specific : ', socket)
   // const [chat, setchat] = useState();
-  const [messages, setMessages] = useState([
-    { sendBy: "f", message: "Hii", time: "12:32" },
-    { sendBy: "me", message: "Hello", time: "12:32" },
-    { sendBy: "f", message: "How are you", time: "12:32" },
-    { sendBy: "me", message: "Kaun", time: "12:32" },
-    { sendBy: "me", message: "?", time: "12:32" },
-    { sendBy: "f", message: "Nai pehchana?", time: "12:32" },
-    { sendBy: "me", message: "Jb hi to puchha", time: "12:32" },
-    { sendBy: "me", message: "Kaun", time: "12:32" },
-    { sendBy: "me", message: "?", time: "12:32" },
-    { sendBy: "f", message: "Nai pehchana?", time: "12:32" },
-    { sendBy: "me", message: "Jb hi to puchha", time: "12:32" },
-    { sendBy: "me", message: "Kaun", time: "12:32" },
-    { sendBy: "me", message: "?", time: "12:32" },
-    { sendBy: "f", message: "Nai pehchana?", time: "12:32" },
-    { sendBy: "me", message: "Jb hi to puchha", time: "12:32" },
-    { sendBy: "me", message: "Kaun", time: "12:32" },
-    { sendBy: "me", message: "?", time: "12:32" },
-    { sendBy: "f", message: "Nai pehchana?", time: "12:32" },
-    { sendBy: "me", message: "Jb hi to puchha", time: "12:32" },
-    { sendBy: "me", message: "Kaun", time: "12:32" },
-    { sendBy: "me", message: "?", time: "12:32" },
-    { sendBy: "f", message: "Nai pehchana?", time: "12:32" },
-    { sendBy: "me", message: "Jb hi to puchha", time: "12:32" },
-  ]);
-  const handleOnSend = ()=> {
-
-  }
+  const [messages, setMessages] = useState([{}]);
   useEffect(()=>{
     if(chatScroll.current){
       chatScroll.current.scrollIntoView({behavior:'smooth'})
     }
   },[messages])
-
-
-
+  
+  
+  
   let user = {
     name:'random'
+  };
+  let userId = userData.id;
+  let frndsId = data._id;
+  socket.on('new-message',(data)=> {
+    setMessages([...messages,data])
+  })
+  socket.on('frndOnline',(bdata)=>{
+    console.log(bdata)
+    if(data._id === bdata.frndId){
+      currentFriend.online_status = true;
+    }
+  })
+  const handleOnSend = async (e)=> {
+    e.preventDefault();
+    setchat('')
+    // socket.emit('')
+    // let res = await axios.post(`${BackendUrl}/send-messages`, {senderId:userId,receiverId:frndsId,content:chat})
+    // console.log(res)
+    // var socket = socketConn();
+    socket.emit('client-message',{senderId:userId,receiverId:frndsId,content:chat})
+    setMessages([...messages,{senderId:userId,receiverId:frndsId,content:chat}])
+    
+
   }
+  let fetchMessages = async ()=> {
+    let res = await axios.post(`${BackendUrl}/get-messages`, {senderId:userId,receiverId: frndsId})
+    if(res){
+      setMessages(res.data);
+    }
+  }
+  useEffect(()=> {
+    fetchMessages();
+  },[data])
 
   useEffect(() => {
     if (scrollToBottom.current) {
@@ -73,8 +83,8 @@ const SpecificChat = ({ data }) => {
                 className="rounded-full border-2 p-1 border-purple-900"
               />
               <div className="flex flex-col leading-4">
-                <p className="font-medium" onClick={()=> console.log(messages)}>{data.name}</p>
-                <p className="text-xs font-medium text-purple-900">Online</p>
+                <p className="font-medium" onClick={()=> console.log(messages)}>{userData.currentFriend.name}</p>
+                <p className="text-xs font-medium text-purple-900">{userData.currentFriend.online_status ? 'online' : 'offline'}</p>
               </div>
             </div>
             <div className="flex gap-5">
@@ -85,10 +95,10 @@ const SpecificChat = ({ data }) => {
           </div>
         </div>
         <div className="chattings -translate-y-5">
-          <Messages data={conversation} />
+          <Messages message={messages} user={userId}/>
           <div ref={chatScroll}></div>
         </div>
-        <div className="fixed w-[80vw] bottom-5">
+        <div className="fixed w-[75vw] bottom-5">
           <form
             action=""
             onSubmit={handleOnSend}
@@ -105,6 +115,7 @@ const SpecificChat = ({ data }) => {
               className="outline-none focus:border-purple-700 border-2 rounded-full py-2 px-3 w-[80%] text-black"
             />
             <div
+            
               onClick={handleOnSend}
               className="bg-purple-700 cursor-pointer hover:text-xl duration-100 rounded-full flex items-center w-11 justify-center text-white"
             >
