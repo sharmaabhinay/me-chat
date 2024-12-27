@@ -28,7 +28,6 @@ const CreateAccount = ()=> {
       }
     };
     const postingData = async () => {
-      console.log(phone,password)
       try {
         const response = await axios.post(`${BackendUrl}/signup`,{phone:phone,password:password})
         if(response.data == 'already registered'){
@@ -36,7 +35,6 @@ const CreateAccount = ()=> {
           setPhoneError('number already registered')
         }else if(response.data.message == 'user created'){
           setIsSpin(false)
-          console.log(response.data)
           alert('number registered successfully')
           dispatch(set_sign_in(response.data.data))
           navigate('/user')
@@ -84,9 +82,7 @@ const CreateAccount = ()=> {
         }
       }
     };
-    useEffect(() => {
-      console.log(BackendUrl);
-    }, [isChecked]);
+
     const checkFun = (e) => {
       // setIsChecked(true)
       if (!isChecked) {
@@ -94,7 +90,6 @@ const CreateAccount = ()=> {
       } else {
         setIsChecked(false);
       }
-      console.log(isChecked);
     };
   
     return (

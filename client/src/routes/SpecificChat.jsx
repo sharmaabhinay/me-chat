@@ -33,13 +33,21 @@ const SpecificChat = ({ data , socket }) => {
   };
   let userId = userData.id;
   let frndsId = data._id;
-  socket.on('new-message',(data)=> {
-    setMessages([...messages,data])
+  socket.on('new-message',(bdata)=> {
+    if(frndsId === bdata.senderId){
+      setMessages([...messages,bdata])
+    }
+    
   })
   socket.on('frndOnline',(bdata)=>{
-    console.log(bdata)
+    // console.log(bdata)
     if(data._id === bdata.frndId){
-      currentFriend.online_status = true;
+      data.isOnline = true;
+    }
+  })
+  socket.on('leave',(bdata)=> {
+    if(data._id === bdata.userId){
+      data.isOnline = false;
     }
   })
   const handleOnSend = async (e)=> {
@@ -60,6 +68,7 @@ const SpecificChat = ({ data , socket }) => {
       setMessages(res.data);
     }
   }
+
   useEffect(()=> {
     fetchMessages();
   },[data])
@@ -69,6 +78,12 @@ const SpecificChat = ({ data , socket }) => {
       scrollToBottom.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [conversation]);
+
+  const handleOnInputChange = (e)=> {
+    setchat(e.target.value)
+    // socket.emit('typing', {isTyping:true})
+    
+  }
   
   return (
     <div className="w-[77vw] h-[92vh]">
@@ -83,8 +98,8 @@ const SpecificChat = ({ data , socket }) => {
                 className="rounded-full border-2 p-1 border-purple-900"
               />
               <div className="flex flex-col leading-4">
-                <p className="font-medium" onClick={()=> console.log(messages)}>{userData.currentFriend.name}</p>
-                <p className="text-xs font-medium text-purple-900">{userData.currentFriend.online_status ? 'online' : 'offline'}</p>
+                <p className="font-medium">{userData.currentFriend.name}</p>
+                <p className={`text-xs font-medium ${data.isOnline ? 'text-purple-900' : 'text-black' } `}>{data.isOnline ? 'online' : 'offline'}</p>
               </div>
             </div>
             <div className="flex gap-5">
@@ -110,7 +125,7 @@ const SpecificChat = ({ data , socket }) => {
             <input
               type="text"
               value={chat}
-              onChange={(e) => setchat(e.target.value)}
+              onChange={handleOnInputChange}
               placeholder="start your holy conversation..."
               className="outline-none focus:border-purple-700 border-2 rounded-full py-2 px-3 w-[80%] text-black"
             />

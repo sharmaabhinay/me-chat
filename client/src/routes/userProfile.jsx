@@ -14,7 +14,7 @@ const UserProfile = () => {
   let [email, setEmail] = useState("");
  
   useEffect(()=> {
-    console.log('here is the : ', result)
+    // console.log('here is the : ', result)
   },[result])
   let avatars = [
     {
@@ -55,9 +55,9 @@ const UserProfile = () => {
     let {data} = await axios.post(`${BackendUrl}/user-profile`,{userData})
     if(data.message == 'profile updated'){
       alert('profile updated')
-      console.log(data)
       data = data.user;
       dispatch(sign_in_profile({data}))
+      navigate('/chat')
       
     }else{
       alert('someting went wrong')

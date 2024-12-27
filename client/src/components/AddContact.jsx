@@ -32,8 +32,7 @@ const AddContact = ({ onClose }) => {
         userId: userData.id
       });
       if(res){
-        console.log('contact users : ', res.data.data)
-        dispatch(refresh_contact_list(res.data.data))
+        dispatch(refresh_contact_list(res.data.contacts))
         onClose();
       }
     }

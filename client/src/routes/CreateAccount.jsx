@@ -29,7 +29,7 @@ const Signup = () => {
     try {
       const response = await axios.post(`${BackendUrl}/singin-user`,{phone:phone,password:password})
       // const response = await axios.get("http://localhost:4300/");
-      console.log(response.data);
+      // console.log(response.data);
     } catch (err) {
       console.log(err);
     }
@@ -59,7 +59,7 @@ const Signup = () => {
   };
   useEffect(() => {
     dispatch(set_sign_in(isChecked));
-    console.log(BackendUrl);
+    // console.log(BackendUrl);
   }, [isChecked]);
   const checkFun = (e) => {
     // setIsChecked(true)
@@ -68,7 +68,7 @@ const Signup = () => {
     } else {
       setIsChecked(false);
     }
-    console.log(isChecked);
+    // console.log(isChecked);
   };
 
   return (

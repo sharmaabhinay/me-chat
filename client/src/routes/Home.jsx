@@ -22,13 +22,13 @@ const Home = () => {
   const userData = useSelector((state) => state.rootReducer.userData);
   // const result = useSelector((state) => state.rootReducer.socket);
   // console.log("socket result : ", result);
-  console.log(userData.currentFriend.id);
+  // console.log(userData.currentFriend.id);
   const userId = userData.id;
   // console.log(">>", userId);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    console.log("homejs", userData);
+    // console.log("homejs", userData);
     // console.log("homejs", userData.refreshContactList);
   }, [userData]);
 
@@ -41,6 +41,7 @@ const Home = () => {
   const [singleChat, setSingleChat] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [reusableSocket,setReusableSocket] = useState()
+  const [fetchC,setFetchC] = useState(0)
   let scrollToBottom = useRef();
   let [contacts, setContacts] = useState([
     {
@@ -122,12 +123,28 @@ const Home = () => {
     },
   ]);
   // console.log("single chat : ", singleChat._id);
+  let fetchContacts = userData.fetchContacts;
+  const getcontacts = async () => {
+    let res = await axios.post(`${BackendUrl}/get-contacts`, {
+      userId: userData.id,
+    });
+    if (res) {
+      // console.log(res)
+      dispatch(refresh_contact_list(res.data.contacts));
+      setContacts(fetchContacts);
+    }
+
+  };
+  useEffect(() => {
+    getcontacts();
+    setContacts(userData.fetchContacts);
+  }, [fetchC]);
   useEffect(() => {
     let socket = socketConn();
     setReusableSocket(socket)
-    console.log("socket from 126 : ",socket)
+    // console.log("socket from 126 : ",socket)
     socket.on("connected", (data) => {
-      console.log(data);
+      // console.log(data);
       if (data) {
         dispatch(set_User_Data({ isOnline: true }));
       } else {
@@ -136,16 +153,16 @@ const Home = () => {
 
       socket.emit("joined", userId);
       socket.on("welcome", (data) => {
-        console.log(data);
+        // console.log(data);
       });
       socket.on("frndOnline", (data) => {
-        // dispatch(set_frnd_online({frndId:data.frndId,isOnline:true}))
-        console.log(
-          "frnd id : ",
-          userData.currentFriend.id,
-          "online : ",
-          data.frndId
-        );
+        getcontacts()
+        // console.log(
+        //   "frnd id : ",
+        //   userData.currentFriend.id,
+        //   "online : ",
+        //   data.frndId
+        // );
         // console.log("single chat : ", singleChat._id);
         if (
           singleChat._id === data.frndId ||
@@ -155,35 +172,18 @@ const Home = () => {
         } else {
           dispatch(set_frnd_online(false));
         }
-        console.log(data);
+        // console.log(data);
       });
-      socket.on("new-messsage", (data) => {
-        console.log(data);
-      });
+      socket.on('new-message',(data)=> {
+        getcontacts();
+      })
     });
   }, [0]);
   const handleOnaddContact = () => {
     alert("hello world");
   };
 
-  let fetchContacts = userData.fetchContacts;
-  const getcontacts = async () => {
-    let res = await axios.post(`${BackendUrl}/get-contacts`, {
-      userId: userData.id,
-    });
-    // console.log(res.data.data);
-    if (res) {
-      dispatch(refresh_contact_list(res.data.data));
-      setContacts(fetchContacts);
-    }
 
-    // console.log("new contacts : ", userData.fetchContacts);
-    // dispatch(refresh_contact_list(false))
-  };
-  useEffect(() => {
-    getcontacts();
-    setContacts(userData.fetchContacts);
-  }, [0]);
   useEffect(() => {
     setContacts(fetchContacts);
   }, [fetchContacts]);
@@ -290,26 +290,27 @@ const Home = () => {
               <div
                 key={i}
                 onClick={() => HandleOnSelectChat(contact)}
-                className={`flex items-center justify-between p-2 border-2 border-gray-400 rounded-full hover:-translate-y-2 duration-300 ${
-                  contact.isOnline ? "bg-blue-400" : null
-                }  cursor-pointer ${
+                className={`flex items-center justify-between p-2 border-2 border-gray-400 rounded-full hover:translate-x-2 z-2 duration-300 cursor-pointer ${
                   currentFriendValue === contact._id
                     ? "border-purple-700"
                     : null
                 }`}
               >
                 <div className="flex items-center gap-3">
+                  <div >
                   <img
                     src="https://www.das-macht-schule.net/wp-content/uploads/2018/04/dummy-profile-pic.png"
                     alt=""
                     width={40}
                     className="rounded-full"
                   />
+                  <div className={`h-3 w-3 bg-green-700 rounded-full -translate-y-10 ${contact.isOnline ? 'block':'hidden'}`}></div>
+                  </div>
                   <div className="leading-4">
                     <h1 className="font-medium text-gray-300">
                       {contact.name}
                     </h1>
-                    <p className="text-sm text-purple-100">Hello mr!</p>
+                    <p className="text-sm text-purple-100">{contact.last_message ? contact.last_message : 'Hello'}</p>
                   </div>
                 </div>
                 <div className="leading-4 flex flex-col items-center">
@@ -334,7 +335,7 @@ const Home = () => {
             </div>
           </div>
         </div>
-        <div className="text-white w-77%">
+        <div className="text-white z-0 w-77%">
           {!chatSelected ? <Welcome /> : <SpecificChat data={singleChat} socket={reusableSocket}/>}
         </div>
       </div>

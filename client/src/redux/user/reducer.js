@@ -79,7 +79,7 @@ const userData = (state = initialState, action) => {
         fetchContacts: action.data,
       };
     case SET_FRND_ONLINE:
-      console.log(action)
+      // console.log(action)
       return {
         ...state,
         currentFriend:{

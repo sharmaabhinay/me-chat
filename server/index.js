@@ -21,18 +21,15 @@ app.get("/html", (req, res) => {
   res.send("html loaded");
 });
 app.set('io', io)
-// console.log(User)
 const onlineUsers = new Map();
 io.on("connection", (socket) => {
-  // console.log('her is the youtube : ',socket)
-  console.log("socket connected : ",socket.id)
+  // console.log("socket connected : ",socket.id)
 
   socket.emit("connected", { data: "client connected" });
   socket.on('joined',async (user)=> {
     await Users.findOneAndUpdate({_id:user},{isOnline:true})
-    console.log(`${user} is online`)
+    // console.log(`${user} is online`)
     onlineUsers.set(user,socket.id)
-    console.log("on users : ",onlineUsers)
     socket.userId = user;
 
     let usercontacts = await Users.findOne({_id:user})
@@ -41,7 +38,7 @@ io.on("connection", (socket) => {
       let contactId = contact._id.toString();
       if(onlineUsers.has(contactId)){
         const contactSocketId = onlineUsers.get(contactId);
-        console.log("cs id : ",contactSocketId)
+        // console.log("cs id : ",contactSocketId)
         io.to(contactSocketId).emit('frndOnline',{
           frndId:user,
           message:`${usercontacts.name} is online`
@@ -52,8 +49,10 @@ io.on("connection", (socket) => {
       }
     })
   })
+  // socket.on('typing',(data)=> {
+
+  // })
   socket.on('client-message',async (data)=>{
-    console.log(data)
     let senderId = data.senderId;
     let receiverId = data.receiverId;
     
@@ -62,13 +61,23 @@ io.on("connection", (socket) => {
       if (!sender || !receiver) {
         res.send("user not found");
       } else {
-        console.log('both user found')
-        console.log(receiver)
-        if(receiver.contacts.includes(senderId)){
-          console.log(receiver.contacts,"loaded") 
+        // console.log('both user found')
+        
+        if(receiver.contacts.includes({_id:senderId})){
+          // console.log(receiver.contacts,"loaded") 
         }else{
-          console.log('un loaded')
-          await Users.findOneAndUpdate({_id:receiverId},{$addToSet:{contacts : senderId}},{new:true})
+          // console.log('un loaded')
+
+          const updatedUser = await Users.findByIdAndUpdate(
+            receiverId,
+            {
+              $addToSet: { contacts: { _id: senderId, addedOn: new Date() , last_message:data.content } },
+            },
+            { new: true }
+          );
+          if(updatedUser){
+            // console.log('user added')
+          }
         }
         let result = await Messages(data);
         await result.save();
@@ -77,7 +86,7 @@ io.on("connection", (socket) => {
    
     if(onlineUsers.has(data.receiverId)){
       const receiverSocketId = onlineUsers.get(data.receiverId);
-      console.log("receiver socket id : ",receiverSocketId)
+      // console.log("receiver socket id : ",receiverSocketId)
       io.to(receiverSocketId).emit('new-message',{
         senderId:data.senderId,
         content:data.content,
@@ -88,10 +97,11 @@ io.on("connection", (socket) => {
   
   socket.on("disconnect",async () => {
     onlineUsers.delete(socket.userId)
-    console.log('socket user is here : ', socket.userId)
-    console.log('disconnetion onlin users : ', onlineUsers)
+    // console.log('socket user is here : ', socket.userId)
+    // console.log('disconnetion onlin users : ', onlineUsers)
     await Users.findOneAndUpdate({_id:socket.userId},{isOnline:false})
     socket.broadcast.emit("leave", {
+      userId: socket.userId,
       user: users[socket.id],
       message: "this user has left the chat",
     });
@@ -101,14 +111,14 @@ io.on("connection", (socket) => {
 
 app.post("/signup", async (req, res) => {
   const { phone, password } = req.body;
-  console.log(req.body);
+  // console.log(req.body);
   let user = await Users.findOne({ phone: phone });
   if (user) {
     res.send("already registered");
   } else {
     let newUser = new Users({ phone: phone, password: password });
     await newUser.save();
-    console.log(newUser);
+    // console.log(newUser);
     if (newUser) {
       let newresponse = await Users.findOne({ phone: phone });
       if (newresponse) {
@@ -116,12 +126,12 @@ app.post("/signup", async (req, res) => {
       }
     }
   }
-  console.log(user);
+  // console.log(user);
 });
 app.post("/signin", async (req, res) => {
   const { phone, password } = req.body;
   const user = await Users.findOne({ phone: phone });
-  console.log(user)
+  // console.log(user)
   if (user) {
     if (user.password === password) {
       res.send({ data: user, message: "user logged in" });
@@ -135,7 +145,7 @@ app.post("/signin", async (req, res) => {
 
 app.post("/user-profile", async (req, res) => {
   const { name, id, profile_pic, email, about } = req.body.userData;
-  console.log(req.body);
+  // console.log(req.body);
   let user = await Users.findOne({ _id: id });
 
   if (user) {
@@ -144,7 +154,6 @@ app.post("/user-profile", async (req, res) => {
       { name: name, email: email, profile_pic: profile_pic, about: about }
     );
     if (updateUser) {
-      console.log(updateUser);
       user = await Users.findOne({ _id: id });
       res.send({ user: user, message: "profile updated" });
     } else {
@@ -156,55 +165,83 @@ app.post("/user-profile", async (req, res) => {
 });
 app.post("/add-to-contact", async (req, res) => {
   const { phone, name, userId } = req.body;
-  console.log(req.body);
-  let user = await Users.findOne({ _id: userId });
-  if (user) {
-    let newContact = await Users.findOne({ phone: phone });
-    if (!newContact) {
-      res.send("user not found");
-    } else {
-      let result = await Users.findOneAndUpdate(
-        { _id: userId },
-        { $addToSet: { contacts: newContact._id} },
-        { new: true }
-      );
-      console.log(result);
-      res.status(200).send("Friend added successfully");
-    }
-  } else {
-    res.send("logged user not found");
-  }
-});
 
-app.post("/get-contacts", async (req, res) => {
-  const { userId } = req.body;
   try {
-    let clientUser = await Users.findOne({ _id: userId });
-    let contactIds = clientUser.contacts;
-    const contacts = await Users.find({ _id: { $in: contactIds } }).select(
-      "name email phone profile_pic about isOnline lastLogin"
+    let user = await Users.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Logged-in user not found" });
+    }
+
+    let newContact = await Users.findOne({ phone });
+    if (!newContact) {
+      return res.status(404).json({ success: false, message: "User with this phone not found" });
+    }
+
+    // console.log("New contact ID:", newContact._id);
+
+    const updatedUser = await Users.findByIdAndUpdate(
+      userId,
+      {
+        $addToSet: { contacts: { _id: newContact._id, addedOn: new Date() } },
+      },
+      { new: true }
     );
-    res.status(200).json({ success: true, data: contacts });
+
+    // console.log("Updated user:", updatedUser);
+
+    res.status(200).json({
+      success: true,
+      message: "Friend added successfully",
+      data: updatedUser.contacts,
+    });
   } catch (error) {
+    // console.error("Error adding contact:", error);
     res.status(500).json({ success: false, message: "Server error", error });
   }
 });
 
+app.post('/get-temp', async (req,res)=> {
+  const {userId} = req.body;
+  let result = await Users.findOne({_id:userId})
+  res.send(result)
+})
+
+app.post("/get-contacts", async (req, res) => {
+  const { userId } = req.body;
+
+  try {
+    const user = await Users.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const contactIds = user.contacts.map((contact) => contact._id); 
+    const contacts = await Users.find({ _id: { $in: contactIds } }).select(
+      "name email phone profile_pic about isOnline lastLogin"
+    );
+    const result = user.contacts.map((contact)=>  contacts._id === contact._id)
+    
+    res.status(200).json({ success: true, contacts });
+  } catch (error) {
+    // console.error("Error fetching contacts:", error);
+    res.status(500).json({ success: false, message: "Server error", error });
+  }
+});
+
+
+
 app.post("/send-messages", async (req, res) => {
   const { senderId, receiverId } = req.body;
-  console.log(req.body);
   try {
     let sender = await Users.findOne({ _id: senderId });
     let receiver = await Users.findOne({ _id: receiverId });
     if (!sender || !receiver) {
       res.send("user not found");
     } else {
-      console.log('both user found')
-      console.log(receiver)
       if(receiver.contacts.includes(senderId)){
-        console.log(receiver.contacts,"loaded") 
+        // console.log(receiver.contacts,"loaded") 
       }else{
-        console.log('un loaded')
+        // console.log('un loaded')
         await Users.findOneAndUpdate({_id:receiverId},{$addToSet:{contacts : senderId}},{new:true})
       }
       let result = await Messages(req.body);
