@@ -1,10 +1,8 @@
 import {io} from 'socket.io-client';
-export let LocalUrl = "http://localhost:4300/";
-export let RenderUrl = "https://me-chat-cazt.onrender.comm/";
-export let BcUrl = "https://chat-app-backend-phi-azure.vercel.app/";
+import BackendUrl from '../backendUrl';
 
 let socketConn = ()=> {
-    let ENDPOINT = LocalUrl;
+    let ENDPOINT = BackendUrl;
     const socket = io(ENDPOINT,{transports:['websocket']});
     if(socket){
         console.log('connected')
