@@ -82,7 +82,6 @@ const Signin = ()=> {
       } else {
         setIsChecked(false);
       }
-      console.log(isChecked);
     };
   
     return (
