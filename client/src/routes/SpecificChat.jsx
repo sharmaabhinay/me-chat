@@ -26,12 +26,22 @@ const SpecificChat = ({ data , socket }) => {
   let user = {
     name:'random'
   };
+  const addMessage =(data)=> {
+    setMessages([...messages, data])
+    notificationSound.current.play();
+  }
   let userId = userData.id;
   let frndsId = data._id;
   socket.on('new-message',(bdata)=> {
-    notificationSound.current.play();
-    if(frndsId === bdata.senderId){
-      setMessages([...messages,bdata])
+    console.log('line 32 : ', bdata)
+    console.log('frnd Id : ', frndsId)
+    
+    if(frndsId !== bdata.senderId){
+      console.log('not the right friend')
+      setMessages(messages)
+      notificationSound.current.pause();
+    }else{
+      addMessage(bdata)
     }
     
   })
@@ -82,55 +92,55 @@ const SpecificChat = ({ data , socket }) => {
   }
   
   return (
-    <div className="w-[77vw] h-[92vh]">
+    <div className="w-auto h-full">
       <div className="parent">
-        <div className="contactInfo w-[40%] m-auto">
-          <div className="bg-gray-200 text-black rounded-full items-center p-2 flex justify-between">
+        <div className="contactInfo max-sm:w-[80%] w-[30rem] m-auto">
+          <div className="bg-gray-200 text-black rounded-full items-center max-[380px]:p-2 max-[380px]:p- p-2 flex justify-between">
             <div className="flex items-center gap-2">
               <img
                 src="https://www.das-macht-schule.net/wp-content/uploads/2018/04/dummy-profile-pic.png"
                 alt=""
-                width={40}
-                className="rounded-full border-2 p-1 border-purple-900"
+                
+                className="rounded-full border-2 p-1 border-purple-900 max-[380px]:w-[30px] w-[40px]"
               />
               <div className="flex flex-col leading-4">
-                <p className="font-medium">{userData.currentFriend.name}</p>
-                <p className={`text-xs font-medium ${data.isOnline ? 'text-purple-900' : 'text-black' } `}>{data.isOnline ? 'online' : 'offline'}</p>
+                <p className="font-medium max-sm:text-md">{userData.currentFriend.name}</p>
+                <p className={`text-xs font-medium max-sm:text-[11px] ${data.isOnline ? 'text-purple-900' : 'text-black' } `}>{data.isOnline ? 'online' : 'offline'}</p>
               </div>
             </div>
-            <div className="flex gap-5">
-              <i className="fa-solid fa-phone"></i>
-              <i className="fa-solid fa-video"></i>
-              <i className="fa-solid fa-circle-info"></i>
+            <div className="flex  max-sm:gap-3 gap-5">
+              <i className="fa-solid fa-phone max-[380px]:text-xs"></i>
+              <i className="fa-solid fa-video max-[380px]:text-xs"></i>
+              <i className="fa-solid fa-circle-info max-[380px]:text-xs"></i>
             </div>
           </div>
         </div>
-        <div className="chattings -translate-y-5">
+        <div className="chattings">
           <Messages message={messages} user={userId}/>
           <div ref={chatScroll}></div>
         </div>
-        <div className="fixed w-[75vw] bottom-5">
+        <div className="w-[30rem] max-sm:w-[90%] m-auto bottom-5">
           <form
             action=""
             onSubmit={handleOnSend}
-            className="flex justify-between w-[40%] m-auto gap-4"
+            className="flex justify-between items-center m-auto max-[380px]:gap-1 gap-4"
           >
-            <div className="bg-white hover:text-xl duration-100 rounded-full flex items-center w-11 justify-center text-purple-700">
-              <i className="fa-solid fa-paperclip"></i>
+            <div className="bg-white hover:text-xl duration-100 rounded-full flex items-center max-[380px]:w-8 max-[380px]:h-7 h-11 w-11 justify-center text-purple-700">
+              <i className="fa-solid fa-paperclip max-[380px]:text-sm"></i>
             </div>
             <input
               type="text"
               value={chat}
               onChange={handleOnInputChange}
               placeholder="start your holy conversation..."
-              className="outline-none focus:border-purple-700 border-2 rounded-full py-2 px-3 w-[80%] text-black"
+              className="outline-none focus:border-purple-700 max-[380px]:text-sm border-2 rounded-full max-[380px]:py-1 py-2 px-3 w-[80%] text-black"
             />
             <div
             
               onClick={handleOnSend}
-              className="bg-purple-700 cursor-pointer hover:text-xl duration-100 rounded-full flex items-center w-11 justify-center text-white"
+              className="bg-purple-700 cursor-pointer hover:text-xl duration-100 rounded-full flex items-center max-[380px]:w-8 max-[380px]:h-7 h-11 w-11 justify-center text-white"
             >
-              <i className="fa-solid fa-paper-plane"></i>
+              <i className="fa-solid fa-paper-plane max-[380px]:text-sm"></i>
             </div>
           </form>
         </div>
