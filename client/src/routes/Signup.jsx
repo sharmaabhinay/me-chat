@@ -19,16 +19,16 @@ const Signup = () => {
 
   return (
     <div
-      className="h-screen bg-gray-700 grid items-center justify-center"
+      className="h-screen bg-gray-700 flex flex-col"
       id="bg-image"
     >
-      <div className="bg-purple-700 absolute w-full top-0 font-bold text-lg text-white p-2 font-mono">
+      <div className="bg-purple-700 w-full xs:text-sm top-0 font-bold md:text-lg text-white p-2 font-mono">
         React-Chat
       </div>
-      <div className="flex bg-gray-200 flex-col gap-5 rounded-lg p-5 m-auto w-[60%] rotate-y-180">
+      <div className="flex bg-gray-200 flex-col gap-5 rounded-lg p-5 m-auto rotate-y-180 xs:w-[90%]  md:w-[25rem]">
         <div className="flex justify-center gap-3">
-          <button onClick={()=> setAuthComponent('signin')} className={`bg-gray-300 text-black p-1 rounded-full text-lg font-medium w-[40%] ${authComponent == 'signin' ? 'bg-purple-700 text-white' : null}`}>Signin</button>
-          <button onClick={()=> setAuthComponent('signup')} className={`bg-gray-300 text-black p-1 rounded-full text-lg font-medium w-[40%] ${authComponent == 'signup' ? 'bg-purple-700 text-white' : null}`}>Signup</button>
+          <button onClick={()=> setAuthComponent('signin')} className={`bg-gray-300 text-black p-1 rounded-full sm:text-md md:text-lg font-medium w-[40%] ${authComponent == 'signin' ? 'bg-purple-700 text-white' : null}`}>Signin</button>
+          <button onClick={()=> setAuthComponent('signup')} className={`bg-gray-300 text-black p-1 rounded-full sm:text-md md:text-lg font-medium w-[40%] ${authComponent == 'signup' ? 'bg-purple-700 text-white' : null}`}>Signup</button>
         </div>
         {
           authComponent == 'signin' ? <Signin /> : <CreateAccount />

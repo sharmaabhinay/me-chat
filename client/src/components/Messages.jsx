@@ -1,6 +1,14 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 
 const Messages = ({message,user}) => {
+  let viewScroll = useRef(null);
+
+  useEffect(() => {
+      if (viewScroll.current) {
+
+        viewScroll.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }, [message]);
   return (
     <div className=' h-[80vh] overflow-y-scroll px-10' id='ShowContacts'>
         {
@@ -12,6 +20,7 @@ const Messages = ({message,user}) => {
                 </div>
             ))
         }
+        <div ref={viewScroll}></div>
     </div>
   )
 }

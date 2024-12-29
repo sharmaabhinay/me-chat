@@ -95,7 +95,7 @@ const Signin = ()=> {
                 onChange={FunOnChange}
                 type="number"
                 placeholder="phone"
-                className="outline-none w-full focus:border-purple-700 border-2 rounded-full p-2 px-4 text-lg"
+                className="outline-none w-full focus:border-purple-700 border-2 rounded-full p-2 px-4 md:text-lg"
               />
               <p className="text-red-800 text-sm px-4">{phoneError}</p>
             </div>
@@ -105,12 +105,12 @@ const Signin = ()=> {
                 onChange={FunOnChangePass}
                 type="password"
                 placeholder="password"
-                className="outline-none w-full focus:border-purple-700 border-2 rounded-full p-2 px-4 text-lg"
+                className="outline-none w-full focus:border-purple-700 border-2 rounded-full p-2 px-4 md:text-lg"
               />
               <p className="text-red-800 text-sm px-4">{passwordError}</p>
             </div>
   
-            <div className="px-4">
+            <div className="px-4 text-end">
               <a href="" className="text-sm text-blue-800">
                 Forgot password ?
               </a>
@@ -118,9 +118,8 @@ const Signin = ()=> {
             </div>
             <div className="p-4 leading-4">
               <input type="checkbox" id="check" onChange={checkFun} />
-              <label htmlFor="check" className="text-sm">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Sequi,
-                exercitationem.
+              <label htmlFor="check" className="text-sm md:text-sm xs:text-xs">
+                I agree to the terms and conditions.
               </label>
             </div>
   

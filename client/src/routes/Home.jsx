@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import Chats from "../components/Chats";
 import Chattings from "../components/Massages";
 import { User } from "./Signup";
-// import { bg_color } from '../assets/properties'
-// import ReactScrollToBottom from 'react-scroll-to-bottom';
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
 import socketConn from "../components/socketConnection";
 import Welcome from "../components/Welcome";
 import SpecificChat from "./SpecificChat";
@@ -26,9 +26,10 @@ const Home = () => {
   const userId = userData.id;
   // console.log(">>", userId);
   const dispatch = useDispatch();
+ 
 
   useEffect(() => {
-    // console.log("homejs", userData);
+    console.log("homejs", userData);
     // console.log("homejs", userData.refreshContactList);
   }, [userData]);
 
@@ -129,7 +130,7 @@ const Home = () => {
       userId: userData.id,
     });
     if (res) {
-      // console.log(res)
+      console.log(res)
       dispatch(refresh_contact_list(res.data.contacts));
       setContacts(fetchContacts);
     }
@@ -142,9 +143,9 @@ const Home = () => {
   useEffect(() => {
     let socket = socketConn();
     setReusableSocket(socket)
-    // console.log("socket from 126 : ",socket)
+    console.log("socket from 126 : ",socket)
     socket.on("connected", (data) => {
-      // console.log(data);
+      console.log(data);
       if (data) {
         dispatch(set_User_Data({ isOnline: true }));
       } else {
@@ -153,7 +154,7 @@ const Home = () => {
 
       socket.emit("joined", userId);
       socket.on("welcome", (data) => {
-        // console.log(data);
+        console.log(data);
       });
       socket.on("frndOnline", (data) => {
         getcontacts()
@@ -195,55 +196,10 @@ const Home = () => {
       scrollToBottom.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [conversation]);
-  // const socketFun = () => {
-  //   const ENDPOINT = LocalUrl;
-  //   socket = socketIO(ENDPOINT, { transports: ["websocket"] });
-  //   settemp(socket);
-  //   socket.on("connect", () => {
-  //     console.log("colient connected");
-  //     // console.log(socket);
-  //     // setSocket(socket)
-  //   });
-
-  //   socket.emit("joined", { user });
-  //   socket.on("userJoined", (data) => {
-  //     // console.log(data.message);
-  //     setConversation((p) => [...p, data]);
-  //     setConnectedFrnd(data.user.name);
-  //     console.log(connectedFrnd);
-  //   });
-  //   socket.on("welcome", (data) => {
-  //     // setChats([...chats, data]);
-  //     setConversation((p) => [...p, data]);
-  //   });
-  //   socket.on("leave", (data) => {
-  //     console.log(data);
-  //     setConversation((p) => [...p, data]);
-  //   });
-  //   socket.on("new-massage", (data) => {
-  //     setConversation((p) => [...p, data]);
-  //     // console.log(conversation)
-  //   });
-  // };
-  // useEffect(() => {
-  //   console.log(user);
-  //   socketFun();
-  //   console.log(conversation);
-  // }, [user]);
+  
   const handleOnSend = (e) => {
     e.preventDefault();
-    // console.log(temp)
-    // alert(chat)
-    // if (chat.length < 1) {
-    //   alert("message can't be empty");
-    // } else {
-    //   setchat("");
-    //   if (temp) {
-    //     temp.emit("message-send", { user, message: chat });
-    //   } else {
-    //     console.log("socket no initiated");
-    //   }
-    // }
+    
   };
   const HandleOnSelectChat = (e) => {
     setSingleChat(e);
@@ -269,7 +225,7 @@ const Home = () => {
       </p>
       <div className="flex mt-2 backdrop-blur-sm">
         <div className="w-[33%] flex flex-col gap-2">
-          <div className="px-2 py-1 bg-gray-200 rounded-e-full flex items-center justify-between">
+          <div className="px-2 pe-5 py-1 bg-gray-200 rounded-e-full flex items-center justify-between">
             <div className="flex items-center gap-3 font-medium">
               <img
                 src="https://www.das-macht-schule.net/wp-content/uploads/2018/04/dummy-profile-pic.png"
@@ -290,37 +246,38 @@ const Home = () => {
               <div
                 key={i}
                 onClick={() => HandleOnSelectChat(contact)}
-                className={`flex items-center justify-between p-2 border-2 border-gray-400 rounded-full hover:translate-x-2 z-2 duration-300 cursor-pointer ${
+                className={`flex items-center justify-between p-2 border-2 border-gray-400 rounded-full hover:translate-x-2  duration-300 cursor-pointer ${
                   currentFriendValue === contact._id
                     ? "border-purple-700"
                     : null
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div >
+                  <div className="flex">
                   <img
                     src="https://www.das-macht-schule.net/wp-content/uploads/2018/04/dummy-profile-pic.png"
                     alt=""
                     width={40}
                     className="rounded-full"
                   />
-                  <div className={`h-3 w-3 bg-green-700 rounded-full -translate-y-10 ${contact.isOnline ? 'block':'hidden'}`}></div>
+                  <div className={`h-3 w-3 bg-green-700 rounded-full -translate-x-3 ${contact.isOnline ? 'block':'hidden'}`}></div>
                   </div>
                   <div className="leading-4">
                     <h1 className="font-medium text-gray-300">
                       {contact.name}
                     </h1>
-                    <p className="text-sm text-purple-100">{contact.last_message ? contact.last_message : 'Hello'}</p>
+                    <p className="text-sm text-purple-100">{contact.last_message ? contact.last_message : null}</p>
                   </div>
                 </div>
                 <div className="leading-4 flex flex-col items-center">
-                  <p className="text-sm text-white">11:30</p>
-                  <span className="text-sm bg-purple-700 rounded-full font-medium text-white px-2">
+                  <p className="text-sm text-white hidden">11:30</p>
+                  <span className="text-sm bg-purple-700 hidden rounded-full font-medium text-white px-2">
                     6
                   </span>
                 </div>
               </div>
             ))}
+            
             <div
               className="fixedd cursor-pointer w-[21vw] bg-white flex justify-end"
               onClick={() => setShowModal(!showModal)}

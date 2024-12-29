@@ -16,16 +16,11 @@ const SpecificChat = ({ data , socket }) => {
   const [chatSelected, setChatSelected] = useState(false);
   const [singleChat,setSingleChat] = useState({})
   let scrollToBottom = useRef();
-  let chatScroll = useRef();
-  // console.log('socket status from specific : ', socket)
-  // const [chat, setchat] = useState();
+  let chatScroll = useRef(null);
+
   const [messages, setMessages] = useState([{}]);
-  useEffect(()=>{
-    if(chatScroll.current){
-      chatScroll.current.scrollIntoView({behavior:'smooth'})
-    }
-  },[messages])
-  
+
+    let notificationSound = useRef(new Audio ('/notification.mp3'))
   
   
   let user = {
@@ -34,6 +29,7 @@ const SpecificChat = ({ data , socket }) => {
   let userId = userData.id;
   let frndsId = data._id;
   socket.on('new-message',(bdata)=> {
+    notificationSound.current.play();
     if(frndsId === bdata.senderId){
       setMessages([...messages,bdata])
     }
@@ -74,10 +70,10 @@ const SpecificChat = ({ data , socket }) => {
   },[data])
 
   useEffect(() => {
-    if (scrollToBottom.current) {
-      scrollToBottom.current.scrollIntoView({ behavior: "smooth" });
+    if (chatScroll.current) {
+      chatScroll.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [conversation]);
+  }, [messages]);
 
   const handleOnInputChange = (e)=> {
     setchat(e.target.value)

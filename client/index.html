@@ -12,5 +12,24 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      tailwind.config = {
+      theme: {
+        screens:{
+          xs:"480",
+          // sm:'480',
+          md:"768px",
+          lg:"1024",
+          xl:"1200px"
+        },
+        extend: {
+          colors: {
+            clifford: '#da373d',
+          }
+        }
+      }
+    }
+    </script>
+
   </body>
 </html>
