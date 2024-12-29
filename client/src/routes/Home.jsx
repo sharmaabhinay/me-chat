@@ -45,85 +45,7 @@ const Home = () => {
   const [reusableSocket,setReusableSocket] = useState()
   const [fetchC,setFetchC] = useState(0)
   let scrollToBottom = useRef();
-  let [contacts, setContacts] = useState([
-    {
-      name: "Batman",
-      Phone: 4545,
-      messageCount: 2,
-      messageContent: "hellow",
-      time: "11:35",
-    },
-    {
-      name: "Spiderman",
-      Phone: 4545,
-      messageCount: 5,
-      messageContent: "hellow",
-      time: "11:35",
-    },
-    {
-      name: "Padman",
-      Phone: 4545,
-      messageCount: 1,
-      messageContent: "hellow",
-      time: "11:35",
-    },
-    {
-      name: "Snoopdog",
-      Phone: 4545,
-      messageCount: 4,
-      messageContent: "hellow",
-      time: "11:35",
-    },
-    {
-      name: "Venom",
-      Phone: 4545,
-      messageCount: 12,
-      messageContent: "hellow",
-      time: "11:35",
-    },
-    {
-      name: "Dr. doom",
-      Phone: 4545,
-      messageCount: 2,
-      messageContent: "hellow",
-      time: "11:35",
-    },
-    {
-      name: "Shazam",
-      Phone: 4545,
-      messageCount: 4,
-      messageContent: "hellow",
-      time: "11:35",
-    },
-    {
-      name: "Flash",
-      Phone: 4545,
-      messageCount: 1,
-      messageContent: "hellow",
-      time: "11:35",
-    },
-    {
-      name: "Professor",
-      Phone: 4545,
-      messageCount: 2,
-      messageContent: "hellow",
-      time: "11:35",
-    },
-    {
-      name: "Berlin",
-      Phone: 4545,
-      messageCount: 3,
-      messageContent: "hellow",
-      time: "11:35",
-    },
-    {
-      name: "Tokyo",
-      Phone: 4545,
-      messageCount: 3,
-      messageContent: "hellow",
-      time: "11:35",
-    },
-  ]);
+  let [contacts, setContacts] = useState([]);
   // console.log("single chat : ", singleChat._id);
   let fetchContacts = userData.fetchContacts;
   const getcontacts = async () => {
@@ -228,9 +150,9 @@ const Home = () => {
       >
         React-Chat
       </p>
-      <div className="flex justify-between pt-2 backdrop-blur-sm">
-        <div className="max-md:block hidden h-12 absolute w-10 z-10 rounded-e-full bg-white" onClick={handleShowContacts}></div>
-        <div className={` flex flex-col gap-2 absolute w-[20rem] backdrop-blur-sm z-10 ${mobileContacts ? 'block':'hidden'}`}>
+      <div className="flex justify-between pt-2 ">
+        <div className="max-md:block hidden h-10 top-16 absolute w-2 z-10 rounded-e-full bg-white" onClick={handleShowContacts}></div>
+        <div id="bg-image" className={` flex flex-col gap-2 absolute w-full bg-gray-900 z-10 ${mobileContacts ? 'block':'hidden'}`}>
           <div className="px-2 pe-5 py-1 bg-gray-200 rounded-e-full flex items-center justify-between">
             <div className="flex items-center gap-3 font-medium">
               <img
@@ -238,14 +160,14 @@ const Home = () => {
                 width={45}
                 className="rounded-full"
               />
-              <p className="lg:hidden">{userData.name}</p>
+              <p>{userData.name}</p>
             </div>
-            <div>
+            <div className="cursor-pointer">
               <i className="fa-solid fa-ellipsis-vertical"></i>
             </div>
           </div>
           <div
-            className="flex flex-col gap-2 overflow-y-scroll h-[80vh]"
+            className="flex flex-col gap-2 overflow-y-scroll h-[82.4vh]"
             id="ShowContacts"
           >
             {contacts.map((contact, i) => (
@@ -282,24 +204,16 @@ const Home = () => {
                   </span>
                 </div>
               </div>
-            ))}
+            )) || <p className="text-white">Loading...</p>}
+            <p className={`text-white ${fetchContacts.length == 0 ? 'block':'hidden'}`}>no contacts</p>
             
-            <div
-              className="fixedd  cursor-pointer w-[21vw] bg-white flex justify-end"
-              onClick={() => setShowModal(!showModal)}
-            >
-              <div
-                className={`text-red-400 box-shadow-2 fixed bottom-10 bg-white rounded-full p-4 ${
-                  showModal ? "rotate-45" : null
-                }`}
-              >
-                <p>➕</p>
-              </div>
+            <div onClick={()=> setShowModal(!showModal)} className="absolute right-10 hover:text-purple-800 delay-75 bottom-10 cursor-pointer bg-white rounded-full p-2 px-[.6rem]">
+            <i class="fa-solid fa-user-plus text-lg"></i>
             </div>
           </div>
         </div>
 
-        <div className=" flex flex-col gap-2   max-md:hidden w-[17rem]">
+        <div className=" flex flex-col gap-2  max-md:hidden w-[17rem]">
           <div className="px-2 pe-5 py-1 bg-gray-200 rounded-e-full flex items-center justify-between">
             <div className="flex items-center gap-3 font-medium">
               <img
@@ -307,9 +221,9 @@ const Home = () => {
                 width={45}
                 className="rounded-full"
               />
-              <p className="lg:hidden">{userData.name}</p>
+              <p className="">{userData.name}</p>
             </div>
-            <div>
+            <div className="cursor-pointer">
               <i className="fa-solid fa-ellipsis-vertical"></i>
             </div>
           </div>
@@ -321,7 +235,7 @@ const Home = () => {
               <div
                 key={i}
                 onClick={() => HandleOnSelectChat(contact)}
-                className={`flex items-center justify-between p-2 border-2 border-gray-400 rounded-full hover:translate-x-2  duration-300 cursor-pointer ${
+                className={`flex items-center justify-between p-2 border-2 border-gray-400 rounded-full hover:translate-x-2 duration-300 cursor-pointer ${
                   currentFriendValue === contact._id
                     ? "border-purple-700"
                     : null
@@ -351,19 +265,10 @@ const Home = () => {
                   </span>
                 </div>
               </div>
-            ))}
+            )) || <p className="text-white">contact list are empty</p>}
             
-            <div
-              className="fixedd  cursor-pointer w-[21vw] bg-white flex justify-end"
-              onClick={() => setShowModal(!showModal)}
-            >
-              <div
-                className={`text-red-400 box-shadow-2 fixed bottom-10 bg-white rounded-full p-4 ${
-                  showModal ? "rotate-45" : null
-                }`}
-              >
-                <p>➕</p>
-              </div>
+            <div onClick={()=> setShowModal(!showModal)} className="absolute left-[10rem] hover:text-purple-800 delay-75 bottom-10 cursor-pointer bg-white rounded-full p-2 px-[.6rem]">
+            <i class="fa-solid fa-user-plus text-lg"></i>
             </div>
           </div>
         </div>

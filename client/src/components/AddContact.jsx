@@ -18,22 +18,27 @@ const AddContact = ({ onClose }) => {
   };
   const handleOnSubmit = async (e) => {
     e.preventDefault();
-    let userId = userData.id;
-    let res = await axios.post(`${BackendUrl}/add-to-contact`, {
-      name: contactName,
-      phone: phone,
-      userId: userId,
-    });
-    if (res.data == "user not found") {
-      setError("User not found");
-    } else {
-      alert("user added");
-      let res = await axios.post(`${BackendUrl}/get-contacts`, {
-        userId: userData.id
+    if(phone.length < 3){
+      setError('Invalid phone number')
+    }else{
+
+      let userId = userData.id;
+      let res = await axios.post(`${BackendUrl}/add-to-contact`, {
+        name: contactName,
+        phone: phone,
+        userId: userId,
       });
-      if(res){
-        dispatch(refresh_contact_list(res.data.contacts))
-        onClose();
+      if (res.data == "user not found") {
+        setError("User not found");
+      } else {
+        alert("user added");
+        let res = await axios.post(`${BackendUrl}/get-contacts`, {
+          userId: userData.id
+        });
+        if(res){
+          dispatch(refresh_contact_list(res.data.contacts))
+          onClose();
+        }
       }
     }
   };
@@ -41,30 +46,34 @@ const AddContact = ({ onClose }) => {
     <div
       ref={handleModal}
       onClick={closeModal}
-      className="fixed w-[100vw] z-10 h-[100vh] flex justify-center items-center bg-opacity-30 backdrop-blur-sm"
+      className="fixed w-[100vw] z-20 h-[100vh]  bg-opacity-30 backdrop-blur-sm"
     >
-      <div className="flex flex-col justify-center items-center rounded-lg bg-gray-400 p-4">
-        <h1 className="text-lg font-medium mb-2">Add contact</h1>
+      <div className="flex mt-10 max-[480px]:w-[90%] w-[25rem] border-b-2 m-auto flex-col justify-center items-center rounded-lg bg-gray-900 p-4">
+        <h1 className="text-lg font-medium mb-2 text-white">Add contact</h1>
         <form
           action=""
           onSubmit={handleOnSubmit}
           className="flex flex-col gap-3"
         >
-          <input
+          {/* <input
             value={contactName}
             onChange={(e) => setContactName(e.target.value)}
             type="text"
             placeholder="name"
             className="rounded-full py-2 px-4 w-[18rem] outline-none bg-gray-300"
-          />
+          /> */}
           <div>
+            <div className="flex">
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               type="number"
+              autoFocus
               placeholder="phone"
-              className="rounded-full py-2 px-4 w-[18rem] outline-none bg-gray-300"
+              className="rounded-full py-2 px-4 max-[480px]:w-[98%] w-[18rem] outline-none bg-gray-300"
             />
+            {/* <i class="fa-solid fa-phone-flip text-white"></i> */}
+            </div>
             <p className="px-4 text-red-900 text-sm">{error}</p>
           </div>
           <button

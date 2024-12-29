@@ -15,6 +15,7 @@ const SpecificChat = ({ data , socket }) => {
   const [connectedFrnd, setConnectedFrnd] = useState("");
   const [chatSelected, setChatSelected] = useState(false);
   const [singleChat,setSingleChat] = useState({})
+  const [loading,setLoading]= useState(false)
   let scrollToBottom = useRef();
   let chatScroll = useRef(null);
 
@@ -69,8 +70,10 @@ const SpecificChat = ({ data , socket }) => {
 
   }
   let fetchMessages = async ()=> {
+    setLoading(true)
     let res = await axios.post(`${BackendUrl}/get-messages`, {senderId:userId,receiverId: frndsId})
     if(res){
+      setLoading(false)
       setMessages(res.data);
     }
   }
@@ -92,7 +95,7 @@ const SpecificChat = ({ data , socket }) => {
   }
   
   return (
-    <div className="w-auto h-full">
+    <div className="w-auto h-full ">
       <div className="parent">
         <div className="contactInfo max-sm:w-[80%] w-[30rem] m-auto">
           <div className="bg-gray-200 text-black rounded-full items-center max-[380px]:p-2 max-[380px]:p- p-2 flex justify-between">
@@ -115,7 +118,8 @@ const SpecificChat = ({ data , socket }) => {
             </div>
           </div>
         </div>
-        <div className="chattings">
+        <p className={`text-white text-center ${loading ? 'block' :'hidden'}`}>connection...</p>
+        <div className="chattings max-md:h-[72.5vh] max-sm:h-[74.7vh] max-[380px]:h-[78vh] h-[70vh]">
           <Messages message={messages} user={userId}/>
           <div ref={chatScroll}></div>
         </div>
@@ -125,7 +129,7 @@ const SpecificChat = ({ data , socket }) => {
             onSubmit={handleOnSend}
             className="flex justify-between items-center m-auto max-[380px]:gap-1 gap-4"
           >
-            <div className="bg-white hover:text-xl duration-100 rounded-full flex items-center max-[380px]:w-8 max-[380px]:h-7 h-11 w-11 justify-center text-purple-700">
+            <div className="bg-white hover:text-xl duration-100 rounded-full flex items-center max-[380px]:w-8 max-[380px]:h-8 h-11 w-11 justify-center text-purple-700">
               <i className="fa-solid fa-paperclip max-[380px]:text-sm"></i>
             </div>
             <input
@@ -133,12 +137,12 @@ const SpecificChat = ({ data , socket }) => {
               value={chat}
               onChange={handleOnInputChange}
               placeholder="start your holy conversation..."
-              className="outline-none focus:border-purple-700 max-[380px]:text-sm border-2 rounded-full max-[380px]:py-1 py-2 px-3 w-[80%] text-black"
+              className="outline-none focus:border-purple-700 max-[380px]:text-sm  border-2 rounded-full max-[380px]:py-2 py-2 px-3 w-[80%] text-black"
             />
             <div
             
               onClick={handleOnSend}
-              className="bg-purple-700 cursor-pointer hover:text-xl duration-100 rounded-full flex items-center max-[380px]:w-8 max-[380px]:h-7 h-11 w-11 justify-center text-white"
+              className="bg-purple-700 cursor-pointer hover:text-xl duration-100 rounded-full flex items-center max-[380px]:w-8 max-[380px]:h-8 h-11 w-11 justify-center text-white"
             >
               <i className="fa-solid fa-paper-plane max-[380px]:text-sm"></i>
             </div>

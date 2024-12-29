@@ -10,7 +10,7 @@ const Messages = ({message,user}) => {
       }
     }, [message]);
   return (
-    <div className=' h-[70vh] overflow-y-scroll max-sm:px-2 px-10' id='ShowContacts'>
+    <div className=' h-full max-sm:h-[79vh] overflow-y-scroll max-sm:px-2 px-10' id='ShowContacts'>
         {
             message.map((item,i)=>(
                 <div key={i}>
