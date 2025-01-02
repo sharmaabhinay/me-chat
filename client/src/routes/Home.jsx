@@ -101,6 +101,11 @@ const Home = () => {
       socket.on('new-message',(data)=> {
         getcontacts();
       })
+
+      socket.on("leave", (data) => {
+        setSingleChat({isOnline:false})
+        getcontacts()
+      });
     });
   }, [0]);
   const handleOnaddContact = () => {

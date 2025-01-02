@@ -2,6 +2,7 @@ const express = require("express");
 const http = require("http");
 const app = express();
 const cors = require("cors");
+console.log("env file : ", process.env.URI)
 // const {Server} = require('socket.io')
 const socketIO = require("socket.io");
 // const { userSchema } = require('./userSchema');
@@ -49,63 +50,91 @@ io.on("connection", (socket) => {
       }
     })
   })
-  // socket.on('typing',(data)=> {
+  socket.on('typing', (data)=> {
+    // console.log(data)
+    if(onlineUsers.has(data.receiverId)){
+       console.log('onine hai')
+       let receiverSocketId = onlineUsers.get(data.receiverId)
+       io.to(receiverSocketId).emit('frnd-typing', {isTyping: data.isTyping, frndId: data.userId})
+    }else{
+      console.log('online nahi hai')
+    }
+  })
 
   // })
-  socket.on('client-message',async (data)=>{
+  socket.on('client-message', async (data) => {
     let senderId = data.senderId;
     let receiverId = data.receiverId;
-    
+  
+    try {
       let sender = await Users.findOne({ _id: senderId });
       let receiver = await Users.findOne({ _id: receiverId });
+  
       if (!sender || !receiver) {
-        res.send("user not found");
+        console.log("User not found");
       } else {
-        // console.log('both user found')
-        
-        if(receiver.contacts.includes({_id:senderId})){
-          // console.log(receiver.contacts,"loaded") 
-        }else{
-          // console.log('un loaded')
+        console.log("Both users found");
 
+        const contactExists = receiver.contacts.some(
+          (contact) => contact._id.toString() === senderId.toString()
+        );
+  
+        if (contactExists) {
+          // console.log("Sender already exists in receiver's contacts:", receiver.contacts);
+        } else {
+          // console.log("Sender not in receiver's contacts, adding...");
+  
+          // Add sender to receiver's contacts
           const updatedUser = await Users.findByIdAndUpdate(
             receiverId,
             {
-              $addToSet: { contacts: { _id: senderId, addedOn: new Date() , last_message:data.content } },
+              $addToSet: { contacts: { _id: senderId } },
             },
             { new: true }
           );
-          if(updatedUser){
-            // console.log('user added')
-          }
+  
+          
         }
+  
+        // Save the message
         let result = await Messages(data);
         await result.save();
-        
       }
-   
-    if(onlineUsers.has(data.receiverId)){
-      const receiverSocketId = onlineUsers.get(data.receiverId);
-      // console.log("receiver socket id : ",receiverSocketId)
-      io.to(receiverSocketId).emit('new-message',{
-        senderId:data.senderId,
-        content:data.content,
-        receiverId:data.receiverId
-      })
+  
+      // sending message to the perticular4 user
+      if (onlineUsers.has(data.receiverId)) {
+        const receiverSocketId = onlineUsers.get(data.receiverId);
+        io.to(receiverSocketId).emit("new-message", {
+          senderId: data.senderId,
+          content: data.content,
+          receiverId: data.receiverId,
+        });
+      }
+    } catch (error) {
+      console.error("Error handling client-message:", error);
     }
-  })
+  });
+  
   
   socket.on("disconnect",async () => {
     onlineUsers.delete(socket.userId)
     // console.log('socket user is here : ', socket.userId)
     // console.log('disconnetion onlin users : ', onlineUsers)
     await Users.findOneAndUpdate({_id:socket.userId},{isOnline:false})
-    socket.broadcast.emit("leave", {
-      userId: socket.userId,
-      user: users[socket.id],
-      message: "this user has left the chat",
-    });
-    // console.log(res.name, "has left the chat");
+    let theuser = await Users.findOne({_id:socket.userId});
+    let contacts = theuser.contacts;
+    contacts.forEach((contact)=> {
+      let contactId = contact._id.toString();
+      let contactSocketId = onlineUsers.get(contactId);
+      if(contactSocketId){
+        io.to(contactSocketId).emit('leave',{
+          userId:socket.userId,
+          message:`${theuser.name} has left the chat`})
+        }else{
+          console.log("contact not online")
+        }
+    })
+
   });
 });
 
