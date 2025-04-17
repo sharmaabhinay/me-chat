@@ -8,27 +8,18 @@ mongoose.connect(atlas)
     .then(() => console.log('messages mongoose connected'))
     .catch((err) => console.log(err));
 
-const messagesSchema = mongoose.Schema({
-    m_id:String,
-    senderId:String,
-    receiverId:String,
-    content:String,
-    sentTime:{
-        type:Date,
-        default:Date.now()
-    },
-    readingTime:{type: Date},
-    status:{
-        type: String,
-        enum:['sent','delivered','read'],
-        default:'sent'
-    },
-    deleted:Boolean,
-    deletedBy:String,
-    deletedTime:String,
+const messageSchema = mongoose.Schema({
+    read:{type:Boolean, default:true},
+  sender:{required:true, type:String},
+  receiver: {required:true, type:String},
+  content: {
+    type: String,
+    required: true,
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-
-
-    
-})
-module.exports = mongoose.model("Messages",messagesSchema)
+module.exports = mongoose.model("Messages", messageSchema);

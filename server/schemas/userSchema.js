@@ -22,9 +22,9 @@ const userSchema = mongoose.Schema({
   password: String,
   lastLogin: String,
   registered_on: {
-    type: Date, default: Date.now
+    type: Date,
+    default: Date.now,
   },
-
   isOnline: {
     type: Boolean,
     default: false,
@@ -33,32 +33,20 @@ const userSchema = mongoose.Schema({
     {
       user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Users",
+        ref: "Users", // Reference to the Users model
       },
       name: String,
       addedOn: { type: Date, default: Date.now },
-      last_message: {type:String
-        ,default:'v'
+      last_message: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Messages", // Reference to the Messages model
       },
       last_online_status: String,
-      last_message_status : String,
-      date_modified:{type: Date},
-      isBlocked: {
-        type: Boolean,
-        default: false
-      }
+      last_message_status: String,
+      date_modified: { type: Date },
+      isBlocked: { type: Boolean, default: false },
     },
   ],
 });
-module.exports = mongoose.model("Users", userSchema);
-// {
-//   user: {
-//     type: mongoose.Schema.Types.ObjectId,
-//     ref: "Users",
-//   },
-// name:String,
-// addedOn: {type:Date, default: Date.now},
-// last_message:String,
-// last_online_status : String,
 
-// },
+module.exports = mongoose.model("Users", userSchema);

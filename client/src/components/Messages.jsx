@@ -29,12 +29,12 @@ const Messages = ({ message, user, socket, frndId }) => {
         <div key={i}>
           <div
             className={`my-2 ${
-              item.senderId != user ? "flex justify-start" : "flex justify-end"
+              item.sender != user ? "flex justify-start" : "flex justify-end"
             }`}
           >
             <span
               className={`p-2 rounded-full px-3 max-sm:text-sm font-medium ${
-                item.senderId != user
+                item.sender != user
                   ? "text-black bg-gray-200"
                   : "text-black bg-purple-500"
               }`}

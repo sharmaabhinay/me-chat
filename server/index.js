@@ -24,12 +24,13 @@ app.get("/html", (req, res) => {
 app.set('io', io)
 const onlineUsers = new Map();
 io.on("connection", (socket) => {
-  // console.log("socket connected : ",socket.id)
+  console.log("socket connected : ",socket.id)
+  console.log("connected users line 28: ", onlineUsers)
 
   socket.emit("connected", { data: "client connected" });
   socket.on('joined',async (user)=> {
     await Users.findOneAndUpdate({_id:user},{isOnline:true})
-    // console.log(`${user} is online`)
+    console.log(`${user} is online`)
     onlineUsers.set(user,socket.id)
     socket.userId = user;
 
@@ -39,7 +40,7 @@ io.on("connection", (socket) => {
       let contactId = contact._id.toString();
       if(onlineUsers.has(contactId)){
         const contactSocketId = onlineUsers.get(contactId);
-        // console.log("cs id : ",contactSocketId)
+        console.log("cs id : ",contactSocketId)
         io.to(contactSocketId).emit('frndOnline',{
           frndId:user,
           message:`${usercontacts.name} is online`
@@ -62,52 +63,55 @@ io.on("connection", (socket) => {
   })
 
   // })
-  socket.on('client-message', async (data) => {
-    let senderId = data.senderId;
-    let receiverId = data.receiverId;
-  
-    try {
-      let sender = await Users.findOne({ _id: senderId });
-      let receiver = await Users.findOne({ _id: receiverId });
-  
-      if (!sender || !receiver) {
-        console.log("User not found");
-      } else {
-        console.log("Both users found");
+  socket.on("client-message", async (data) => {
+    const { senderId, receiverId, content } = data;
 
-        const contactExists = receiver.contacts.some(
-          (contact) => contact._id.toString() === senderId.toString()
-        );
-  
-        if (contactExists) {
-          // console.log("Sender already exists in receiver's contacts:", receiver.contacts);
-        } else {
-          // console.log("Sender not in receiver's contacts, adding...");
-  
-          // Add sender to receiver's contacts
-          const updatedUser = await Users.findByIdAndUpdate(
-            receiverId,
-            {
-              $addToSet: { contacts: { _id: senderId } },
-            },
-            { new: true }
-          );
-  
-          
-        }
-  
-        // Save the message
-        let result = await Messages(data);
-        await result.save();
-      }
-  
-      // sending message to the perticular4 user
+    try {
+      // Save the message to the Messages collection
+      const newMessage = new Messages({
+        sender: senderId,
+        receiver: receiverId,
+        content: content,
+      });
+      const savedMessage = await newMessage.save();
+
+      // Update last_message for the sender in the receiver's contacts
+      const receiverUpdate = await Users.findOneAndUpdate(
+        { _id: receiverId, "contacts.user": senderId },
+        {
+          $set: {
+            "contacts.$.last_message": savedMessage._id,
+            "contacts.$.date_modified": new Date(),
+          },
+        },
+        { new: true }
+      );
+
+      // Log the result of the receiver update
+      console.log("Receiver update result:", receiverUpdate);
+
+      // Update last_message for the receiver in the sender's contacts
+      const senderUpdate = await Users.findOneAndUpdate(
+        { _id: senderId, "contacts.user": receiverId },
+        {
+          $set: {
+            "contacts.$.last_message": savedMessage._id,
+            "contacts.$.date_modified": new Date(),
+          },
+        },
+        { new: true }
+      );
+
+      // Log the result of the sender update
+      console.log("Sender update result:", senderUpdate);
+
+      console.log("Last message updated for both users");
       if (onlineUsers.has(data.receiverId)) {
         const receiverSocketId = onlineUsers.get(data.receiverId);
         io.to(receiverSocketId).emit("new-message", {
-          senderId: data.senderId,
+          sender: data.senderId,
           content: data.content,
-          receiverId: data.receiverId,
+          receiver: data.receiverId,
         });
       }
     } catch (error) {
@@ -117,9 +121,10 @@ io.on("connection", (socket) => {
   
   
   socket.on("disconnect",async () => {
+    console.log('dis online users : ', onlineUsers) 
     onlineUsers.delete(socket.userId)
-    // console.log('socket user is here : ', socket.userId)
-    // console.log('disconnetion onlin users : ', onlineUsers)
+    console.log('socket user is here : ', socket.userId)
+    console.log('disconnetion onlin users : ', onlineUsers)
     await Users.findOneAndUpdate({_id:socket.userId},{isOnline:false})
     let theuser = await Users.findOne({_id:socket.userId});
     let contacts = theuser.contacts;
@@ -140,41 +145,65 @@ io.on("connection", (socket) => {
 
 app.post("/signup", async (req, res) => {
   const { phone, password } = req.body;
-  // console.log(req.body);
+  console.log(req.body);
   let user = await Users.findOne({ phone: phone });
   if (user) {
-    res.send("already registered");
+    res.status(409).send("already registered"); // Conflict
+    console.log('already regisetered')
   } else {
     let newUser = new Users({ phone: phone, password: password });
     await newUser.save();
-    // console.log(newUser);
+    console.log(newUser);
     if (newUser) {
       let newresponse = await Users.findOne({ phone: phone });
       if (newresponse) {
-        res.send({ data: newUser, message: "user created" });
+        res.status(201).send({ data: newUser, message: "user created" }); // Created
       }
     }
   }
-  // console.log(user);
+  console.log(user);
 });
-app.post("/signin", async (req, res) => {
-  const { phone, password } = req.body;
-  const user = await Users.findOne({ phone: phone });
-  // console.log(user)
-  if (user) {
-    if (user.password === password) {
-      res.send({ data: user, message: "user logged in" });
+app.post('/auth', async (req,res)=>{
+  const {userId} = req.body;
+  console.log(userId)
+  try {
+    let user = await Users.findOne({_id:userId});
+    if (user) {
+      console.log(user)
+      return res.status(200).send(user); // 200 for successful retrieval
     } else {
-      res.send({ data: null, message: "wrong password" });
+      return res.status(404).send("User not found"); // 404 for missing user
     }
-  } else {
-    res.send({ data: null, message: "user not found" });
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+app.post("/signin", async (req, res) => {
+  try {
+    console.log("Sign-in request received:", req.body);
+    const { phone, password } = req.body;
+    const user = await Users.findOne({ phone: phone });
+    if (user) {
+      if (user.password === password) {
+        console.log("User logged in successfully:", user._id);
+        res.status(200).send({ data: user, message: "user logged in" }); // OK
+      } else {
+        console.warn("Wrong password for user:", phone);
+        res.status(401).send({ data: null, message: "wrong password" }); // Unauthorized
+      }
+    } else {
+      console.warn("User not found for phone:", phone);
+      res.status(404).send({ data: null, message: "user not found" }); // Not Found
+    }
+  } catch (error) {
+    console.error("Error during sign-in:", error);
+    res.status(500).send({ message: "Internal server error", error: error.message });
   }
 });
 
 app.post("/user-profile", async (req, res) => {
-  const { name, id, profile_pic, email, about } = req.body.userData;
-  // console.log(req.body);
+  const { name, id, profile_pic, email, about } = req.body;
   let user = await Users.findOne({ _id: id });
 
   if (user) {
@@ -184,14 +213,15 @@ app.post("/user-profile", async (req, res) => {
     );
     if (updateUser) {
       user = await Users.findOne({ _id: id });
-      res.send({ user: user, message: "profile updated" });
+      return res.status(200).send({ user: user, message: "Profile updated" }); // 200 for successful update
     } else {
-      res.send("something is broken");
+      return res.status(400).send("Something is broken"); // 400 for bad request
     }
   } else {
-    res.send("not found");
+    return res.status(404).send("User not found"); // 404 for missing user
   }
 });
+
 app.post("/add-to-contact", async (req, res) => {
   const { phone, name, userId } = req.body;
 
@@ -231,33 +261,57 @@ app.post("/add-to-contact", async (req, res) => {
 
 app.post('/get-temp', async (req,res)=> {
   const {userId} = req.body;
-  let result = await Users.findOne({_id:userId})
-  res.send(result)
+  try {
+    let result = await Users.findOne({_id:userId})
+    if (result) {
+      return res.status(200).send(result); // 200 for successful retrieval
+    } else {
+      return res.status(404).send("User not found"); // 404 for missing user
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send("Internal server error"); // 500 for server errors
+  }
 })
 
 app.post("/get-contacts", async (req, res) => {
   const { userId } = req.body;
 
   try {
+    // Find the user
     const user = await Users.findById(userId);
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    const contactIds = user.contacts.map((contact) => contact._id); 
+    // Get the contact IDs from the user's contacts
+    const contactIds = user.contacts.map((contact) => contact._id);
+
+    // Fetch the contact details from the Users collection
     const contacts = await Users.find({ _id: { $in: contactIds } }).select(
       "name email phone profile_pic about isOnline lastLogin"
     );
-    const result = user.contacts.map((contact)=>  contacts._id === contact._id)
-    
-    res.status(200).json({ success: true, contacts });
+
+    // Combine the `contacts` and `user.contacts` arrays
+    const combinedContacts = user.contacts.map((contact) => {
+      const matchingContact = contacts.find((c) => c._id.toString() === contact._id.toString());
+      return { ...contact.toObject(), ...matchingContact.toObject() };
+    });
+
+    // Sort the combined contacts array by `date_modified` (latest first)
+    const sortedContacts = combinedContacts.sort((a, b) => {
+      const dateA = new Date(a.date_modified || 0); // Default to 0 if `date_modified` is undefined
+      const dateB = new Date(b.date_modified || 0);
+      return dateB - dateA; // Sort in descending order
+    });
+
+    // Send the sorted array as the response
+    res.status(200).send({ success: true, contacts: sortedContacts });
   } catch (error) {
-    // console.error("Error fetching contacts:", error);
+    console.error("Error fetching contacts:", error);
     res.status(500).json({ success: false, message: "Server error", error });
   }
 });
-
-
 
 app.post("/send-messages", async (req, res) => {
   const { senderId, receiverId } = req.body;
@@ -265,20 +319,22 @@ app.post("/send-messages", async (req, res) => {
     let sender = await Users.findOne({ _id: senderId });
     let receiver = await Users.findOne({ _id: receiverId });
     if (!sender || !receiver) {
-      res.send("user not found");
+      return res.status(404).send("User not found"); // 404 for missing users
     } else {
-      if(receiver.contacts.includes(senderId)){
-        // console.log(receiver.contacts,"loaded") 
-      }else{
-        // console.log('un loaded')
-        await Users.findOneAndUpdate({_id:receiverId},{$addToSet:{contacts : senderId}},{new:true})
+      if (!receiver.contacts.includes(senderId)) {
+        await Users.findOneAndUpdate(
+          { _id: receiverId },
+          { $addToSet: { contacts: senderId } },
+          { new: true }
+        );
       }
       let result = await Messages(req.body);
       await result.save();
-      
+      return res.status(201).send("Message sent successfully"); // 201 for successful creation
     }
   } catch (err) {
     console.log(err);
+    return res.status(500).send("Internal server error"); // 500 for server errors
   }
 });
 
@@ -287,19 +343,21 @@ app.post("/get-messages", async (req, res) => {
   try {
     let result = await Messages.find({
       $or: [
-        { senderId: senderId, receiverId: receiverId },
-        { receiverId: senderId, senderId: receiverId },
+        { sender: senderId, receiver: receiverId },
+        { receiver: senderId, sender: receiverId },
       ],
     })
-      .populate("senderId")
-      .populate("receiverId");
+      .populate("sender")
+      .populate("receiver");
 
     if (result) {
-      res.send(result);
+      return res.status(200).send(result); // 200 for successful retrieval
+    } else {
+      return res.status(404).send("Messages not found"); // 404 for no messages
     }
   } catch (err) {
     console.log(err);
-    res.send(err);
+    return res.status(500).send("Internal server error"); // 500 for server errors
   }
 });
 

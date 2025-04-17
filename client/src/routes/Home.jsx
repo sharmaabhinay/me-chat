@@ -2,10 +2,11 @@ import React, { useEffect, useRef, useState } from "react";
 import Chats from "../components/Chats";
 import Chattings from "../components/Massages";
 import { User } from "./Signup";
-import Skeleton from 'react-loading-skeleton'
-import 'react-loading-skeleton/dist/skeleton.css'
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 import socketConn from "../components/socketConnection";
 import Welcome from "../components/Welcome";
+import Cookies from "js-cookie";
 import SpecificChat from "./SpecificChat";
 import AddContact from "../components/AddContact";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,47 +18,36 @@ import {
 } from "../redux/user/action";
 import axios from "axios";
 import BackendUrl from "../backendUrl";
+import { useNavigate, useNavigation } from "react-router-dom";
 
 const Home = () => {
+  let navigation = useNavigate();
   const userData = useSelector((state) => state.rootReducer.userData);
-  // const result = useSelector((state) => state.rootReducer.socket);
-  // console.log("socket result : ", result);
-  // console.log(userData.currentFriend.id);
-  const userId = userData.id;
-  // console.log(">>", userId);
-  const dispatch = useDispatch();
- 
+  const userId = Cookies.get("userId");
 
-  useEffect(() => {
-    // console.log("homejs", userData);
-    // console.log("homejs", userData.refreshContactList);
-  }, [userData]);
+  // const userId = userData.id;
+  const dispatch = useDispatch();
 
   const [conversation, setConversation] = useState([]);
-  const [chat, setchat] = useState("");
-  const [temp, settemp] = useState();
-  const [mobileContacts,setMobileContacts] = useState(false)
-  const [connectedFrnd, setConnectedFrnd] = useState("");
+  const [mobileContacts, setMobileContacts] = useState(false);
   const [chatSelected, setChatSelected] = useState(false);
   const [currentFriendValue, setCurrentFriendValue] = useState("");
   const [singleChat, setSingleChat] = useState({});
   const [showModal, setShowModal] = useState(false);
-  const [reusableSocket,setReusableSocket] = useState()
-  const [fetchC,setFetchC] = useState(0)
+  const [reusableSocket, setReusableSocket] = useState();
+  const [fetchC, setFetchC] = useState(0);
   let scrollToBottom = useRef();
   let [contacts, setContacts] = useState([]);
-  // console.log("single chat : ", singleChat._id);
   let fetchContacts = userData.fetchContacts;
   const getcontacts = async () => {
     let res = await axios.post(`${BackendUrl}/get-contacts`, {
-      userId: userData.id,
+      userId: userId,
     });
     if (res) {
-      // console.log(res)
+      // let sortContacts = res.data.contacts.sort("date")
       dispatch(refresh_contact_list(res.data.contacts));
       setContacts(fetchContacts);
     }
-
   };
   useEffect(() => {
     getcontacts();
@@ -65,10 +55,8 @@ const Home = () => {
   }, [fetchC]);
   useEffect(() => {
     let socket = socketConn();
-    setReusableSocket(socket)
-    console.log("socket from 126 : ",socket)
+    setReusableSocket(socket);
     socket.on("connected", (data) => {
-      console.log(data);
       if (data) {
         dispatch(set_User_Data({ isOnline: true }));
       } else {
@@ -80,14 +68,7 @@ const Home = () => {
         console.log(data);
       });
       socket.on("frndOnline", (data) => {
-        getcontacts()
-        // console.log(
-        //   "frnd id : ",
-        //   userData.currentFriend.id,
-        //   "online : ",
-        //   data.frndId
-        // );
-        // console.log("single chat : ", singleChat._id);
+        getcontacts();
         if (
           singleChat._id === data.frndId ||
           userData.currentFriend.id == data.frndId
@@ -96,15 +77,14 @@ const Home = () => {
         } else {
           dispatch(set_frnd_online(false));
         }
-        // console.log(data);
       });
-      socket.on('new-message',(data)=> {
+      socket.on("new-message", (data) => {
         getcontacts();
-      })
+      });
 
       socket.on("leave", (data) => {
-        setSingleChat({isOnline:false})
-        getcontacts()
+        setSingleChat({ isOnline: false });
+        getcontacts();
       });
     });
   }, [0]);
@@ -112,6 +92,27 @@ const Home = () => {
     alert("hello world");
   };
 
+  useEffect(() => {
+    // let userId = Cookies.get('userId')
+    if (userId) {
+      const fetchUserData = async () => {
+        console.log("root function called");
+        let response = await axios.post(`${BackendUrl}/auth`, {
+          userId: userId,
+        });
+        console.log(response.data);
+        if (response.status == 200) {
+          dispatch(set_User_Data(response.data));
+          if (!response.data.name) {
+            navigate("/user");
+          }
+        } else {
+          return;
+        }
+      };
+      fetchUserData();
+    }
+  }, []);
 
   useEffect(() => {
     setContacts(fetchContacts);
@@ -124,14 +125,13 @@ const Home = () => {
       scrollToBottom.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [conversation]);
-  
+
   const handleOnSend = (e) => {
     e.preventDefault();
-    
   };
   const HandleOnSelectChat = (e) => {
     setSingleChat(e);
-    setMobileContacts(false)
+    setMobileContacts(false);
     dispatch(
       set_current_friend({
         id: e._id,
@@ -140,24 +140,30 @@ const Home = () => {
         profile_pic: e.profile_pic,
       })
     );
+    dispatch(set_frnd_online(e.isOnline));
     setChatSelected(true);
     setCurrentFriendValue(e._id);
   };
-  const handleShowContacts = ()=>{
-    setMobileContacts(true)
-  }
+  const handleShowContacts = () => {
+    setMobileContacts(true);
+  };
   return (
     <div className="bg-gray-900 h-[100vh]" id="bg-image">
       {showModal && <AddContact onClose={() => setShowModal(false)} />}
-      <p
-        className="bg-purple-900 text-white font-bold max-sm:p-1 max-sm:font-medium max-sm:text-sm p-2"
-        
-      >
+      <p className="bg-purple-900 text-white font-bold max-sm:p-1 max-sm:font-medium max-sm:text-sm p-2">
         React-Chat
       </p>
       <div className="flex justify-between pt-2 ">
-        <div className="max-md:block hidden h-10 top-16 absolute w-2 z-10 rounded-e-full bg-white" onClick={handleShowContacts}></div>
-        <div id="bg-image" className={` flex flex-col gap-2 absolute w-full bg-gray-900 z-10 ${mobileContacts ? 'block':'hidden'}`}>
+        <div
+          className="max-md:block hidden h-10 top-16 absolute w-2 z-10 rounded-e-full bg-white"
+          onClick={handleShowContacts}
+        ></div>
+        <div
+          id="bg-image"
+          className={` flex flex-col gap-2 absolute w-full bg-gray-900 z-10 ${
+            mobileContacts ? "block" : "hidden"
+          }`}
+        >
           <div className="px-2 pe-5 py-1 bg-gray-200 rounded-e-full flex items-center justify-between">
             <div className="flex items-center gap-3 font-medium">
               <img
@@ -187,19 +193,25 @@ const Home = () => {
               >
                 <div className="flex items-center gap-3">
                   <div className="flex">
-                  <img
-                    src="https://www.das-macht-schule.net/wp-content/uploads/2018/04/dummy-profile-pic.png"
-                    alt=""
-                    width={40}
-                    className="rounded-full"
-                  />
-                  <div className={`h-3 w-3 rounded-full -translate-x-3 ${contact.isOnline ? 'bg-green-700':null}`}></div>
+                    <img
+                      src="https://www.das-macht-schule.net/wp-content/uploads/2018/04/dummy-profile-pic.png"
+                      alt=""
+                      width={40}
+                      className="rounded-full"
+                    />
+                    <div
+                      className={`h-3 w-3 rounded-full -translate-x-3 ${
+                        contact.isOnline ? "bg-green-700" : null
+                      }`}
+                    ></div>
                   </div>
                   <div className="leading-4">
                     <h1 className="font-medium text-gray-300">
                       {contact.name}
                     </h1>
-                    <p className="text-sm text-purple-100">{contact.last_message ? contact.last_message : null}</p>
+                    <p className="text-sm text-purple-100">
+                      {contact.last_message ? contact.last_message : null}
+                    </p>
                   </div>
                 </div>
                 <div className="leading-4 flex flex-col items-center">
@@ -210,10 +222,19 @@ const Home = () => {
                 </div>
               </div>
             )) || <p className="text-white">Loading...</p>}
-            <p className={`text-white ${fetchContacts.length == 0 ? 'block':'hidden'}`}>no contacts</p>
-            
-            <div onClick={()=> setShowModal(!showModal)} className="absolute right-10 hover:text-purple-800 delay-75 bottom-10 cursor-pointer bg-white rounded-full p-2 px-[.6rem]">
-            <i class="fa-solid fa-user-plus text-lg"></i>
+            <p
+              className={`text-white ${
+                fetchContacts.length == 0 ? "block" : "hidden"
+              }`}
+            >
+              no contacts
+            </p>
+
+            <div
+              onClick={() => setShowModal(!showModal)}
+              className="absolute right-10 hover:text-purple-800 delay-75 bottom-10 cursor-pointer bg-white rounded-full p-2 px-[.6rem]"
+            >
+              <i class="fa-solid fa-user-plus text-lg"></i>
             </div>
           </div>
         </div>
@@ -248,19 +269,25 @@ const Home = () => {
               >
                 <div className="flex items-center gap-3">
                   <div className="flex">
-                  <img
-                    src="https://www.das-macht-schule.net/wp-content/uploads/2018/04/dummy-profile-pic.png"
-                    alt=""
-                    width={40}
-                    className="rounded-full"
-                  />
-                  <div className={`h-3 w-3 rounded-full -translate-x-3 ${contact.isOnline ? 'bg-green-700':null}`}></div>
+                    <img
+                      src="https://www.das-macht-schule.net/wp-content/uploads/2018/04/dummy-profile-pic.png"
+                      alt=""
+                      width={40}
+                      className="rounded-full"
+                    />
+                    <div
+                      className={`h-3 w-3 rounded-full -translate-x-3 ${
+                        contact.isOnline ? "bg-green-700" : null
+                      }`}
+                    ></div>
                   </div>
                   <div className="leading-4">
                     <h1 className="font-medium text-gray-300">
                       {contact.name}
                     </h1>
-                    <p className="text-sm text-purple-100">{contact.last_message ? contact.last_message : null}</p>
+                    <p className="text-sm text-purple-100">
+                      {contact.last_message ? contact.last_message : null}
+                    </p>
                   </div>
                 </div>
                 <div className="leading-4 flex flex-col items-center">
@@ -271,14 +298,21 @@ const Home = () => {
                 </div>
               </div>
             )) || <p className="text-white">contact list are empty</p>}
-            
-            <div onClick={()=> setShowModal(!showModal)} className="absolute left-[10rem] hover:text-purple-800 delay-75 bottom-10 cursor-pointer bg-white rounded-full p-2 px-[.6rem]">
-            <i class="fa-solid fa-user-plus text-lg"></i>
+
+            <div
+              onClick={() => setShowModal(!showModal)}
+              className="absolute left-[10rem] hover:text-purple-800 delay-75 bottom-10 cursor-pointer bg-white rounded-full p-2 px-[.6rem]"
+            >
+              <i class="fa-solid fa-user-plus text-lg"></i>
             </div>
           </div>
         </div>
         <div className="text-white z-0 w-[100%]">
-          {!chatSelected ? <Welcome /> : <SpecificChat data={singleChat} socket={reusableSocket}/>}
+          {!chatSelected ? (
+            <Welcome />
+          ) : (
+            <SpecificChat data={singleChat} socket={reusableSocket} />
+          )}
         </div>
       </div>
     </div>

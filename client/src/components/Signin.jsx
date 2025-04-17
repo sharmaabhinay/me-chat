@@ -6,6 +6,7 @@ import axios from "axios";
 import { set_sign_in, set_User_Data } from "../redux/user/action";
 export let User = { name: "", phone: "", email: "" };
 import BackendUrl from "../backendUrl";
+import Coockies from "js-cookie";
 
 const Signin = () => {
   const result = useSelector((state) => state.rootReducer.userData);
@@ -30,30 +31,44 @@ const Signin = () => {
     // console.log(result)
   }, [result]);
   const postingData = async () => {
+    console.log('function called')
     setIsSpin(true);
     try {
-      const { data } = await axios.post(`${BackendUrl}/signin`, {
+
+      const response = await axios.post(`${BackendUrl}/signin`, {
         phone: phone,
         password: password,
       });
-      // console.log(data.data)
-      if (data) {
-        setIsSpin(false);
+      if(response){
+        console.log(response.data)
       }
-      if (data.message == "user logged in") {
-        dispatch(set_User_Data(data.data));
-        navigate("/chat");
-      } else if (data.message == "wrong password") {
-        setPasswordError("wrong password");
-      } else if (data.message == "user not found") {
-        setPhoneError("user not found");
+      setIsSpin(false);
+      if (response.status === 200) {
+        // document.cookie = `userId=${response.data.data._id}; path=/`;
+        Coockies.set("userId", response.data.data._id, { expires: 7 , path: '/'});
+        dispatch(set_User_Data(response.data.data));
+        // alert("Login successful"); 
+        
+        location.reload();
+        // navigate("/chat");
       } else {
-        alert("something went wrong");
-        setIsSpin(false);
+        alert("Login failed. Please check your credentials.");
       }
     } catch (err) {
-      console.log(err);
-    }
+      setIsSpin(false);
+      if (err.response) {
+        if (err.response.status === 401) {
+          setPasswordError("wrong password");
+        } else if (err.response.status === 500) {
+          setPhoneError("Server error. Please try again later.");
+        } else if (err.response.status === 404) {
+          setPhoneError("User not found. Please check your phone number.");
+        }else{
+          console.log(err)
+          alert("An unexpected error occurred. Please try again.");
+        }
+      }
+    } 
   };
 
   const FunOnChangePass = (e) => {
@@ -143,7 +158,6 @@ const Signin = () => {
           }`}
         ></div>
       </div>
-      
     </form>
   );
 };

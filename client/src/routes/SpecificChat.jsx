@@ -1,68 +1,94 @@
 import React, { useRef, useState, useEffect } from "react";
 import Messages from "../components/Messages";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import BackendUrl from "../backendUrl";
+import { refresh_contact_list } from "../redux/user/action";
 
 const SpecificChat = ({ data, socket }) => {
   const userData = useSelector((state) => state.rootReducer.userData);
+  const friend = userData.currentFriend;
+  const dispatch = useDispatch();
   const [chat, setchat] = useState([]);
   const [loading, setLoading] = useState(false);
   let chatScroll = useRef(null);
-  const [typing,setTyping] = useState(false);
-  const typingSession = useRef(null)
+  const [typing, setTyping] = useState(false);
+  const typingSession = useRef(null);
+  const [FriendOnline, setFriendOnline] = useState(
+    data.isOnline
+  );
+  console.log(friend.online_status)
+  const getcontacts = async () => {
+      let res = await axios.post(`${BackendUrl}/get-contacts`, {
+        userId: userId,
+      });
+      if (res) {
+        // let sortContacts = res.data.contacts.sort("date")
+        dispatch(refresh_contact_list(res.data.contacts));
+        // setContacts(fetchContacts);
+      }
+    };
 
   const [messages, setMessages] = useState([{}]);
 
   let notificationSound = useRef(new Audio("/notification.mp3"));
 
-  const addMessage = (data) => {
-    setMessages([...messages, data]);
+  const addMessage = (bdata) => {
     notificationSound.current.play();
+    setMessages((prevMessages) => [...prevMessages, bdata]);
   };
   let userId = userData.id;
-  let frndsId = data._id;
-  socket.on("new-message", (bdata) => {
-    console.log("line 32 : ", bdata);
-    console.log("frnd Id : ", frndsId);
+  useEffect(()=> {
+  },[messages])
+  useEffect(() => {
+    socket.on("new-message", (bdata) => {
+      getcontacts();
+      console.log(friend)
+      console.log("data : ", data._id, "friend : ", friend.id, "bdata : ", bdata.senderId)
+      if (data._id !== bdata.sender) {
+        // addMessage(bdata)
+        // notificationSound.current.pause();
+        // console.log(friend.id)
+      } else {
+        addMessage(bdata)
+      }
+    });
+  }, []);
 
-    if (frndsId !== bdata.senderId) {
-      console.log("not the right friend");
-      setMessages(messages);
-      notificationSound.current.pause();
-    } else {
-      addMessage(bdata);
-    }
-  });
-  socket.on("frndOnline", (bdata) => {
-    // console.log(bdata)
-    if (data._id === bdata.frndId) {
-      data.isOnline = true;
-    }
-  });
-  socket.on("leave", (bdata) => {
-    if (data._id === bdata.userId) {
-      data.isOnline = false;
-    }
-  });
+  useEffect(() => {
+    socket.on("frndOnline", (bdata) => {
+      if (friend.id || data._id === bdata.frndId) {
+        setFriendOnline(true);
+      }
+    });
+  }, []);
+  useEffect(() => {
+    socket.on("leave", (bdata) => {
+      if (friend.id || data._id === bdata.userId) {
+        setFriendOnline(false);
+      }
+    });
+  }, []);
   const handleOnSend = async (e) => {
     e.preventDefault();
     setchat("");
+    setTyping(false);
     socket.emit("client-message", {
       senderId: userId,
-      receiverId: frndsId,
+      receiverId: friend.id || data._id,
       content: chat,
     });
     setMessages([
       ...messages,
-      { senderId: userId, receiverId: frndsId, content: chat },
+      { sender: userId, receiver: friend.id, content: chat },
     ]);
+    getcontacts();
   };
   let fetchMessages = async () => {
     setLoading(true);
     let res = await axios.post(`${BackendUrl}/get-messages`, {
       senderId: userId,
-      receiverId: frndsId,
+      receiverId: friend.id || data._id,
     });
     if (res) {
       setLoading(false);
@@ -73,44 +99,63 @@ const SpecificChat = ({ data, socket }) => {
   useEffect(() => {
     setMessages([]);
     fetchMessages();
-  }, [data]);
+  }, [friend]);
 
   useEffect(() => {
     if (chatScroll.current) {
       chatScroll.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
-  
-  useEffect(()=> {
-    if(chat.length > 0 ){
-      if(!typing){
-        setTyping(true)
+
+  useEffect(() => {
+    if (chat.length > 0) {
+      if (!typing) {
+        setTyping(true);
       }
-      clearTimeout(typingSession.current)
+      clearTimeout(typingSession.current);
       typingSession.current = setTimeout(() => {
-        setTyping(false)
-      },1500)
+        setTyping(false);
+      }, 1500);
     }
-  },[chat])
-  useEffect(()=> {
-    socket.emit('typing', {isTyping:typing, userId:userData.id, receiverId : data._id})
-  },[typing])
+  }, [chat]);
+  useEffect(() => {
+    socket.emit("typing", {
+      isTyping: typing,
+      userId: userData.id,
+      receiverId: friend.id || data._id,
+    });
+  }, [typing]);
   const handleOnInputChange = (e) => {
     setchat(e.target.value);
-        
   };
-  useEffect(()=> {
-    socket.on('frnd-typing',(data)=> {
-      console.log(data)
-    })
- 
+  // useEffect(() => {
+  //   socket.on("frnd-typing", (bdata) => {
+  //     if (friend.id || data._d === bdata.frndId) {
+  //     } else {
+  //     }
+  //   });
+  // }, []);
 
-  },[])
+  useEffect(() => {
+    const fetchMessages = async () => {
+      setLoading(true);
+      let res = await axios.post(`${BackendUrl}/get-messages`, {
+        senderId: userId,
+        receiverId: friend.id || data._id,
+      });
+      if (res) {
+        setLoading(false);
+        setMessages((prevMessages) => [...prevMessages, ...res.data]);
+      }
+    };
+  
+    fetchMessages();
+  }, [friend]);
 
   return (
     <div className="w-auto h-full ">
       <div className="parent">
-        <div className="contactInfo max-sm:w-[80%] w-[30rem] m-auto">
+        <div className="contactInfo max-sm:w-[80%] bg-blur-sm w-[30rem] m-auto">
           <div className="bg-gray-200 text-black rounded-full items-center max-[380px]:p-2 max-[380px]:p- p-2 flex justify-between">
             <div className="flex items-center gap-2">
               <img
@@ -120,14 +165,14 @@ const SpecificChat = ({ data, socket }) => {
               />
               <div className="flex flex-col leading-4">
                 <p className="font-medium max-sm:text-md">
-                  {userData.currentFriend.name}
+                  {friend.name || data.name}
                 </p>
                 <p
                   className={`text-xs font-medium max-sm:text-[11px] ${
-                    data.isOnline ? "text-purple-900" : "text-black"
+                    FriendOnline ? "text-purple-900" : "text-black"
                   } `}
                 >
-                  {data.isOnline ? "online" : "offline"}
+                  {FriendOnline ? "online" : "offline"}
                 </p>
               </div>
             </div>
@@ -142,7 +187,12 @@ const SpecificChat = ({ data, socket }) => {
           connection...
         </p>
         <div className="chattings max-md:h-[72.5vh] max-sm:h-[74.7vh] max-[380px]:h-[78vh] h-[70vh]">
-          <Messages message={messages} user={userId} frndId={data._id} socket={socket}/>
+          <Messages
+            message={messages}
+            user={userId}
+            frndId={data._id}
+            socket={socket}
+          />
           <div ref={chatScroll}></div>
         </div>
         <div className="w-[30rem] max-sm:w-[90%] m-auto bottom-5">

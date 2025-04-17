@@ -27,12 +27,24 @@ const Signup = () => {
   const postingData = async () => {
     setIsSpin(true);
     try {
-      const response = await axios.post(`${BackendUrl}/singin-user`,{phone:phone,password:password})
-      // const response = await axios.get("http://localhost:4300/");
-      // console.log(response.data);
+      const response = await axios.post(`${BackendUrl}/singup`,{phone:phone,password:password})
+      setIsSpin(false);
+      if (response.status === 201) {
+        dispatch(set_sign_in(true));
+        
+        alert("Login successful");
+        navigate("/chat");
+      }
     } catch (err) {
-      console.log(err);
-    }
+      setIsSpin(false);
+      if(response.err){
+        if(err.response.status === 409){
+          setPhoneError("User already exists")
+      }else{
+        console.log(err)
+        alert("An unexpected error occurred. Please try again.");
+      }
+    }}
   };
   const FunOnChangePass = (e) => {
     setPassword(e.target.value);
