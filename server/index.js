@@ -3,9 +3,7 @@ const http = require("http");
 const app = express();
 const cors = require("cors");
 console.log("env file : ", process.env.URI)
-// const {Server} = require('socket.io')
 const socketIO = require("socket.io");
-// const { userSchema } = require('./userSchema');
 let PORT = "4300";
 app.use(express.json());
 app.use(cors());
@@ -13,8 +11,6 @@ const server = http.createServer(app);
 const io = socketIO(server);
 const Users = require("./schemas/userSchema");
 const Messages = require("./schemas/messagesSchema");
-// userSchema()
-let users = [{}];
 app.get("/", (req, res) => {
   res.send("hello world");
 });
@@ -30,7 +26,7 @@ io.on("connection", (socket) => {
   socket.emit("connected", { data: "client connected" });
   socket.on('joined',async (user)=> {
     await Users.findOneAndUpdate({_id:user},{isOnline:true})
-    console.log(`${user} is online`)
+    // console.log(`${user} is online`)
     onlineUsers.set(user,socket.id)
     socket.userId = user;
 
@@ -40,7 +36,7 @@ io.on("connection", (socket) => {
       let contactId = contact._id.toString();
       if(onlineUsers.has(contactId)){
         const contactSocketId = onlineUsers.get(contactId);
-        console.log("cs id : ",contactSocketId)
+        // console.log("cs id : ",contactSocketId)
         io.to(contactSocketId).emit('frndOnline',{
           frndId:user,
           message:`${usercontacts.name} is online`
@@ -52,17 +48,16 @@ io.on("connection", (socket) => {
     })
   })
   socket.on('typing', (data)=> {
-    // console.log(data)
     if(onlineUsers.has(data.receiverId)){
-       console.log('onine hai')
+      //  console.log('onine hai')
        let receiverSocketId = onlineUsers.get(data.receiverId)
        io.to(receiverSocketId).emit('frnd-typing', {isTyping: data.isTyping, frndId: data.userId})
     }else{
-      console.log('online nahi hai')
+      // console.log('online nahi hai')
     }
   })
 
-  // })
+  
   socket.on("client-message", async (data) => {
   const { senderId, receiverId, content } = data;
 
@@ -76,7 +71,6 @@ io.on("connection", (socket) => {
     const savedMessage = await newMessage.save();
 
     // Check if sender is in the receiver's contacts.
-    // Assuming each contact object has an _id field equal to the contact's user id.
     const receiverUser = await Users.findById(receiverId);
     if (receiverUser) {
       const senderAlreadyInContacts = receiverUser.contacts.some(
@@ -89,7 +83,7 @@ io.on("connection", (socket) => {
           { $addToSet: { contacts: { _id: senderId, addedOn: new Date() } } },
           { new: true }
         );
-        console.log("Sender added to receiver's contacts");
+        // console.log("Sender added to receiver's contacts");
       }
     }
 
@@ -104,7 +98,7 @@ io.on("connection", (socket) => {
       },
       { new: true }
     );
-    console.log("Receiver update result:", receiverUpdate);
+    // console.log("Receiver update result:", receiverUpdate);
 
     // Update last_message for the receiver in the sender's contacts
     const senderUpdate = await Users.findOneAndUpdate(
@@ -117,9 +111,9 @@ io.on("connection", (socket) => {
       },
       { new: true }
     );
-    console.log("Sender update result:", senderUpdate);
+    // console.log("Sender update result:", senderUpdate);
 
-    console.log("Last message updated for both users");
+    // console.log("Last message updated for both users");
 
     // Emit the message to the receiver if they are online
     if (onlineUsers.has(receiverId)) {
@@ -131,16 +125,16 @@ io.on("connection", (socket) => {
       });
     }
   } catch (error) {
-    console.error("Error handling client-message:", error);
+    // console.error("Error handling client-message:", error);
   }
 });
   
   
   socket.on("disconnect",async () => {
-    console.log('dis online users : ', onlineUsers) 
+    // console.log('dis online users : ', onlineUsers) 
     onlineUsers.delete(socket.userId)
-    console.log('socket user is here : ', socket.userId)
-    console.log('disconnetion onlin users : ', onlineUsers)
+    // console.log('socket user is here : ', socket.userId)
+    // console.log('disconnetion onlin users : ', onlineUsers)
     await Users.findOneAndUpdate({_id:socket.userId},{isOnline:false})
     let theuser = await Users.findOne({_id:socket.userId});
     let contacts = theuser.contacts;
@@ -161,15 +155,15 @@ io.on("connection", (socket) => {
 
 app.post("/signup", async (req, res) => {
   const { phone, password } = req.body;
-  console.log(req.body);
+  // console.log(req.body);
   let user = await Users.findOne({ phone: phone });
   if (user) {
     res.status(409).send("already registered"); // Conflict
-    console.log('already regisetered')
+    // console.log('already regisetered')
   } else {
     let newUser = new Users({ phone: phone, password: password });
     await newUser.save();
-    console.log(newUser);
+    // console.log(newUser);
     if (newUser) {
       let newresponse = await Users.findOne({ phone: phone });
       if (newresponse) {
@@ -177,43 +171,36 @@ app.post("/signup", async (req, res) => {
       }
     }
   }
-  console.log(user);
 });
 app.post('/auth', async (req,res)=>{
   const {userId} = req.body;
-  console.log(userId)
   try {
     let user = await Users.findOne({_id:userId});
     if (user) {
-      console.log(user)
       return res.status(200).send(user); // 200 for successful retrieval
     } else {
       return res.status(404).send("User not found"); // 404 for missing user
     }
   } catch (error) {
-    console.log(error)
+    // console.log(error)
   }
 })
 
 app.post("/signin", async (req, res) => {
   try {
-    console.log("Sign-in request received:", req.body);
     const { phone, password } = req.body;
     const user = await Users.findOne({ phone: phone });
     if (user) {
       if (user.password === password) {
-        console.log("User logged in successfully:", user._id);
         res.status(200).send({ data: user, message: "user logged in" }); // OK
       } else {
-        console.warn("Wrong password for user:", phone);
         res.status(401).send({ data: null, message: "wrong password" }); // Unauthorized
       }
     } else {
-      console.warn("User not found for phone:", phone);
       res.status(404).send({ data: null, message: "user not found" }); // Not Found
     }
   } catch (error) {
-    console.error("Error during sign-in:", error);
+    // console.error("Error during sign-in:", error);
     res.status(500).send({ message: "Internal server error", error: error.message });
   }
 });
@@ -259,7 +246,6 @@ app.post("/add-to-contact", async (req, res) => {
     }
 
     // Check if this contact is already added
-    // Assuming user.contacts is an array of objects having an _id field
     const isAlreadyAdded = user.contacts.some(
       (contact) =>
         contact._id.toString() === newContact._id.toString()
@@ -349,10 +335,8 @@ app.post("/get-contacts", async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // Get the contact IDs from the user's contacts
     const contactIds = user.contacts.map((contact) => contact._id);
 
-    // Fetch the contact details from the Users collection
     const contacts = await Users.find({ _id: { $in: contactIds } }).select(
       "name email phone profile_pic about isOnline lastLogin"
     );
