@@ -39,8 +39,8 @@ const userData = (state = initialState, action) => {
     case SIGN_IN:
       return {
         ...state, // Retain the existing state
-        id: action.data._id,
-        phone: action.data.phone,
+        // id: action.data._id,
+        // phone: action.data.phone,
         isLoggedIn: true,
       };
 

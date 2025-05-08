@@ -64,60 +64,76 @@ io.on("connection", (socket) => {
 
   // })
   socket.on("client-message", async (data) => {
-    const { senderId, receiverId, content } = data;
+  const { senderId, receiverId, content } = data;
 
-    try {
-      // Save the message to the Messages collection
-      const newMessage = new Messages({
-        sender: senderId,
-        receiver: receiverId,
-        content: content,
-      });
-      const savedMessage = await newMessage.save();
+  try {
+    // Save the message to the Messages collection
+    const newMessage = new Messages({
+      sender: senderId,
+      receiver: receiverId,
+      content: content,
+    });
+    const savedMessage = await newMessage.save();
 
-      // Update last_message for the sender in the receiver's contacts
-      const receiverUpdate = await Users.findOneAndUpdate(
-        { _id: receiverId, "contacts.user": senderId },
-        {
-          $set: {
-            "contacts.$.last_message": savedMessage._id,
-            "contacts.$.date_modified": new Date(),
-          },
-        },
-        { new: true }
+    // Check if sender is in the receiver's contacts.
+    // Assuming each contact object has an _id field equal to the contact's user id.
+    const receiverUser = await Users.findById(receiverId);
+    if (receiverUser) {
+      const senderAlreadyInContacts = receiverUser.contacts.some(
+        (contact) => contact._id.toString() === senderId
       );
-
-      // Log the result of the receiver update
-      console.log("Receiver update result:", receiverUpdate);
-
-      // Update last_message for the receiver in the sender's contacts
-      const senderUpdate = await Users.findOneAndUpdate(
-        { _id: senderId, "contacts.user": receiverId },
-        {
-          $set: {
-            "contacts.$.last_message": savedMessage._id,
-            "contacts.$.date_modified": new Date(),
-          },
-        },
-        { new: true }
-      );
-
-      // Log the result of the sender update
-      console.log("Sender update result:", senderUpdate);
-
-      console.log("Last message updated for both users");
-      if (onlineUsers.has(data.receiverId)) {
-        const receiverSocketId = onlineUsers.get(data.receiverId);
-        io.to(receiverSocketId).emit("new-message", {
-          sender: data.senderId,
-          content: data.content,
-          receiver: data.receiverId,
-        });
+      if (!senderAlreadyInContacts) {
+        // Add sender to the receiver's contacts if not already added
+        await Users.findByIdAndUpdate(
+          receiverId,
+          { $addToSet: { contacts: { _id: senderId, addedOn: new Date() } } },
+          { new: true }
+        );
+        console.log("Sender added to receiver's contacts");
       }
-    } catch (error) {
-      console.error("Error handling client-message:", error);
     }
-  });
+
+    // Update last_message for the sender in the receiver's contacts
+    const receiverUpdate = await Users.findOneAndUpdate(
+      { _id: receiverId, "contacts._id": senderId },
+      {
+        $set: {
+          "contacts.$.last_message": content,
+          "contacts.$.date_modified": new Date(),
+        },
+      },
+      { new: true }
+    );
+    console.log("Receiver update result:", receiverUpdate);
+
+    // Update last_message for the receiver in the sender's contacts
+    const senderUpdate = await Users.findOneAndUpdate(
+      { _id: senderId, "contacts._id": receiverId },
+      {
+        $set: {
+          "contacts.$.last_message": content,
+          "contacts.$.date_modified": new Date(),
+        },
+      },
+      { new: true }
+    );
+    console.log("Sender update result:", senderUpdate);
+
+    console.log("Last message updated for both users");
+
+    // Emit the message to the receiver if they are online
+    if (onlineUsers.has(receiverId)) {
+      const receiverSocketId = onlineUsers.get(receiverId);
+      io.to(receiverSocketId).emit("new-message", {
+        sender: senderId,
+        content: content,
+        receiver: receiverId,
+      });
+    }
+  } catch (error) {
+    console.error("Error handling client-message:", error);
+  }
+});
   
   
   socket.on("disconnect",async () => {
@@ -203,7 +219,7 @@ app.post("/signin", async (req, res) => {
 });
 
 app.post("/user-profile", async (req, res) => {
-  const { name, id, profile_pic, email, about } = req.body;
+  const { name, id, profile_pic, email, about } = req.body.userData;
   let user = await Users.findOne({ _id: id });
 
   if (user) {
@@ -226,18 +242,37 @@ app.post("/add-to-contact", async (req, res) => {
   const { phone, name, userId } = req.body;
 
   try {
+    // Find logged-in user by ID
     let user = await Users.findById(userId);
     if (!user) {
-      return res.status(404).json({ success: false, message: "Logged-in user not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Logged-in user not found" });
     }
 
+    // Find the new contact by phone
     let newContact = await Users.findOne({ phone });
     if (!newContact) {
-      return res.status(404).json({ success: false, message: "User with this phone not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User with this phone not found" });
     }
 
-    // console.log("New contact ID:", newContact._id);
+    // Check if this contact is already added
+    // Assuming user.contacts is an array of objects having an _id field
+    const isAlreadyAdded = user.contacts.some(
+      (contact) =>
+        contact._id.toString() === newContact._id.toString()
+    );
 
+    if (isAlreadyAdded) {
+      return res.status(409).json({
+        success: false,
+        message: "User is already added in your contacts",
+      });
+    }
+
+    // If not already added, update the contacts using $addToSet
     const updatedUser = await Users.findByIdAndUpdate(
       userId,
       {
@@ -246,18 +281,48 @@ app.post("/add-to-contact", async (req, res) => {
       { new: true }
     );
 
-    // console.log("Updated user:", updatedUser);
-
     res.status(200).json({
       success: true,
       message: "Friend added successfully",
       data: updatedUser.contacts,
     });
   } catch (error) {
-    // console.error("Error adding contact:", error);
-    res.status(500).json({ success: false, message: "Server error", error });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error });
   }
 });
+
+app.post("/remove-contact", async (req, res) => {
+  const { userId, friendId } = req.body;
+  try {
+    // Find the user by ID
+    const user = await Users.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Remove the contact from the user's contacts array
+    const updatedUser = await Users.findByIdAndUpdate(
+      userId,
+      { $pull: { contacts: { _id: friendId } } },
+      { new: true }
+    );
+
+    if (updatedUser) {
+      return res.status(200).json({
+        success: true,
+        message: "Contact removed successfully",
+        data: updatedUser.contacts,
+      });
+    } else {
+      return res.status(400).json({ success: false, message: "Failed to remove contact" });
+    }
+    
+  } catch (error) {
+    
+  }
+})
 
 app.post('/get-temp', async (req,res)=> {
   const {userId} = req.body;

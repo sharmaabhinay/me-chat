@@ -17,7 +17,7 @@ const SpecificChat = ({ data, socket }) => {
   const [FriendOnline, setFriendOnline] = useState(
     data.isOnline
   );
-  console.log(friend.online_status)
+  // console.log(friend.online_status)
   const getcontacts = async () => {
       let res = await axios.post(`${BackendUrl}/get-contacts`, {
         userId: userId,
@@ -44,13 +44,15 @@ const SpecificChat = ({ data, socket }) => {
     socket.on("new-message", (bdata) => {
       getcontacts();
       console.log(friend)
-      console.log("data : ", data._id, "friend : ", friend.id, "bdata : ", bdata.senderId)
-      if (data._id !== bdata.sender) {
+      console.log("data : ", data._id, "friend : ", friend.id, "bdata : ", bdata.sender)
+      if (data._id === bdata.sender) {
+        console.log('same')
         // addMessage(bdata)
         // notificationSound.current.pause();
         // console.log(friend.id)
-      } else {
         addMessage(bdata)
+      } else {
+        console.log('not same')
       }
     });
   }, []);
@@ -136,21 +138,21 @@ const SpecificChat = ({ data, socket }) => {
   //   });
   // }, []);
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      setLoading(true);
-      let res = await axios.post(`${BackendUrl}/get-messages`, {
-        senderId: userId,
-        receiverId: friend.id || data._id,
-      });
-      if (res) {
-        setLoading(false);
-        setMessages((prevMessages) => [...prevMessages, ...res.data]);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchMessages = async () => {
+  //     setLoading(true);
+  //     let res = await axios.post(`${BackendUrl}/get-messages`, {
+  //       senderId: userId,
+  //       receiverId: friend.id || data._id,
+  //     });
+  //     if (res) {
+  //       setLoading(false);
+  //       setMessages((prevMessages) => [...prevMessages, ...res.data]);
+  //     }
+  //   };
   
-    fetchMessages();
-  }, [friend]);
+  //   fetchMessages();
+  // }, [friend]);
 
   return (
     <div className="w-auto h-full ">

@@ -37,10 +37,7 @@ const userSchema = mongoose.Schema({
       },
       name: String,
       addedOn: { type: Date, default: Date.now },
-      last_message: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Messages", // Reference to the Messages model
-      },
+      last_message: {type:String,default:'hii'},
       last_online_status: String,
       last_message_status: String,
       date_modified: { type: Date },

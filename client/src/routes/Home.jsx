@@ -110,7 +110,7 @@ const Home = () => {
           return;
         }
       };
-      fetchUserData();
+      // fetchUserData();
     }
   }, []);
 
