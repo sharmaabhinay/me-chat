@@ -2,6 +2,7 @@ const express = require("express");
 const http = require("http");
 const app = express();
 const cors = require("cors");
+require('dotenv').config();
 console.log("env file : ", process.env.URI)
 const socketIO = require("socket.io");
 let PORT = "4300";
@@ -59,7 +60,7 @@ io.on("connection", (socket) => {
 
   
   socket.on("client-message", async (data) => {
-  const { senderId, receiverId, content } = data;
+  const { senderId, receiverId, content, content_type} = data;
 
   try {
     // Save the message to the Messages collection
@@ -67,6 +68,8 @@ io.on("connection", (socket) => {
       sender: senderId,
       receiver: receiverId,
       content: content,
+      content_type: content_type || 'text', // Default to 'text' if not provided
+
     });
     const savedMessage = await newMessage.save();
 
@@ -121,6 +124,7 @@ io.on("connection", (socket) => {
       io.to(receiverSocketId).emit("new-message", {
         sender: senderId,
         content: content,
+        content_type: content_type || 'text', // Default to 'text' if not provided
         receiver: receiverId,
       });
     }
@@ -174,6 +178,8 @@ app.post("/signup", async (req, res) => {
 });
 app.post('/auth', async (req,res)=>{
   const {userId} = req.body;
+  console.log('userId : ', userId)
+  // res.send(userId)
   try {
     let user = await Users.findOne({_id:userId});
     if (user) {
