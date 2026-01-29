@@ -3,10 +3,12 @@ require("dotenv").config();
 let LocalUrl = process.env.URI;
 // let LocalUrl = "mongodb://localhost:27017/ReactChat";
 let atlas = 'mongodb+srv://abhiisharma76:Password76@cluster0.zzmfe.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+let resumedC = 'mongodb+srv://abhiisharma76:Password76@cluster0.zzmfe.mongodb.net/?appName=Cluster0'
+
 let newUrl =
   "mongodb+srv://abhiisharma76:meeshoclone@cluster0.jzk2fxs.mongodb.net/meeshoclone?retryWrites=true&w=majority&appName=Cluster0";
 mongoose
-  .connect(atlas)
+  .connect(resumedC)
   .then(() => console.log("user mongoose connected"))
   .catch((err) => console.log(err));
 
